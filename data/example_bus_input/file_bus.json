@@ -1,0 +1,17 @@
+{
+    "class_name": "FileBusParams",
+    "bus_type": "FileBus",
+    "time_info": {
+        "start": "2012-06-01 00:00:00",
+        "delta": 900,
+        "end": "2012-06-02 00:00:00"
+    },
+    "output": [
+        {
+            "param": "measured_power",
+            "name": "network_node",
+            "filename": "power.player"
+        }
+    ],
+    "folder": "."
+}

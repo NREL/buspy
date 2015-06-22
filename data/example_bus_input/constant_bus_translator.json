@@ -1,0 +1,18 @@
+{
+    "class_name": "ConstantBusParams",
+    "bus_type": "ConstantBus",
+    "io_translator": "AggregatorBusTranslator",
+    "time_info": {
+        "start": "2012-06-01 00:00:00",
+        "delta": 900,
+        "end": "2012-06-02 00:00:00"
+    },
+    "output": [
+        {
+            "param": null,
+            "name": "summed_power",
+            "value": 4731548.028834177
+        }
+    ],
+    "folder": "."
+}

@@ -1,0 +1,17 @@
+{
+    "class_name": "FileBusParams",
+    "bus_type": "FileBus",
+    "io_translator": "AggregatorBusTranslator",
+    "time_info": {
+        "start": "2012-06-01 00:00:00",
+        "delta": 900.0,
+        "end": "2012-06-02 00:00:00"
+    },
+    "output": [
+        {
+            "name": "summed_power",
+            "param": null,
+            "filename": "power.player"
+        }
+    ]
+}

@@ -1,0 +1,38 @@
+{
+    "class_name": "MultiNodeBusParams",
+    "bus_type": "MultiNodeBus",
+    "io_translator": "AggregatorBusTranslator",
+    "actions": [
+        {
+            "action": "sum",
+            "action-list": [
+                {
+                    "name": "network_node",
+                    "param": "measured_power"
+                }
+            ],
+            "name": "summed_power"
+        }
+    ],
+    "time_info": {
+        "start": "2020-06-01 00:00:00",
+        "delta": 4,
+        "end": "2020-06-01 01:00:00",
+        "timezone": "PST"
+    },
+    "output": [
+        {
+            "name": "network_node",
+            "param": "measured_power"
+        }
+    ],
+    "folder": ".",
+    "nodes": [
+        {
+            "__bus_file": "R1-12.47-2_1.json"
+        },
+        {
+            "__bus_file": "R1-12.47-2_2.json"
+        }
+    ]
+}

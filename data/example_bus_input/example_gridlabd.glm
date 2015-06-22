@@ -1,0 +1,88 @@
+//This will test the accuracy of the HVAC energy use and temperature behavior
+//This test is an example of a peak cooling day
+#set minimum_timestep=900.0;
+
+module residential{
+	implicit_enduses NONE;
+}
+module tape;
+module assert;
+module climate;
+module powerflow;
+
+clock {
+	timezone MST7;
+	starttime '2012-06-01 00:00:00';
+	stoptime '2012-06-02 00:00:00';
+};
+
+
+schedule zippwr {
+	* 0-5 * * * .29307107017222;
+	* 6 * * * 0.58614214034444;
+	* 7-9 * * * 0.87921321051666;
+	* 10-15 * * * 0.58614214034444;
+	* 16 * * * 0.87921321051666;
+	* 17 * * * 1.1722842806889;
+	* 18-20 * * * 1.4653553508611;
+	* 21 * * * 1.1722842806889;
+	* 22 * * * 0.58614214034444;
+	* 23 * * * .29307107017222;
+}
+
+object csv_reader{
+	name CsvReader;
+	filename weather.csv;
+};
+
+object climate{
+	name example_climate;
+	temperature 70;
+    humidity 0.05;
+    object recorder{
+        property temperature;
+        file "test2.csv";
+        interval 60;
+    };
+};
+
+schedule heatspt{
+	* * * * * 60;
+}
+
+schedule coolspt{
+	* * * * * 75;
+}
+
+object triplex_meter{
+	nominal_voltage 120;
+	phases AS;
+	object house{
+        name house_test;
+		window_wall_ratio 0.07;
+		cooling_COP 3.0;
+		system_mode OFF;
+		auxiliary_strategy DEADBAND;
+		heating_system_type HEAT_PUMP;
+		cooling_system_type ELECTRIC;
+		air_temperature 66.0;
+		mass_temperature 66.0;
+		heating_setpoint heatspt*1;
+		cooling_setpoint coolspt*1;
+		object ZIPload {
+			heat_fraction 1;
+			base_power zippwr*1;		
+			power_pf 1;
+			power_fraction 1;
+			current_pf 0;
+			current_fraction 0;
+			impedance_pf 0;
+			impedance_fraction 0;
+		};
+		object recorder{
+			property air_temperature;
+			file "test.csv";
+			interval 60;
+		};
+	};
+}
