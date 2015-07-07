@@ -423,8 +423,8 @@ class GridlabCommHttp(GridlabCommBase):
         self.connected = False
         
         self.GLD_START_TIMEOUT = 60 #sec
-        self.GLD_START_CHECK_DELAY = 0.01 #sec
-        self.GLD_START_RETRYS = 5
+        self.GLD_START_CHECK_DELAY = 0.1 #sec
+        self.GLD_START_RETRYS = 10
         self.GLD_START_LOOP_PAUSE = 1 #sec
         
         atexit.register(GridlabCommHttp._cleanup,self)
@@ -483,8 +483,8 @@ class GridlabCommHttp(GridlabCommBase):
             self.gld_stderr_file = open('stderr', 'w+')
         
             if (self._info.port == GLD_DEFAULT_PORT) or (gld_start_try > 0):
-                #if the port is -1 or we failed last time, find one automatically
-                self._info.port = find_open_tcp_port()
+                #if the port is -1 or if we failed last time, try a random port
+                self._info.port = random.randrange(25000,60000) #new range to not-overlap with global port option in IGMS tool
             arg_list[self.PORT_FLAG] = str(self._info.port)
         
             gld_open_str = self.gridlabd_cmd_args(self._info.filename,*self.dict_to_args(arg_list))
@@ -497,7 +497,7 @@ class GridlabCommHttp(GridlabCommBase):
             except Exception as e:
                 print("%s: Uh Oh, Gld Popen problem (try %d)"%(socket.gethostname(),gld_start_try+1))
                 self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s)"%(sys.exc_info()[0],str(e)), self.debug_label)
-                time.sleep(random.uniform(0.01,0.2))
+                time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Popen complete", self.debug_label)
             
@@ -509,7 +509,7 @@ class GridlabCommHttp(GridlabCommBase):
             if self._gld_instance.returncode is not None:
                 print("%s: Ack! Gld immediate exit wth code %d (try %d)"%(socket.gethostname(), self._gld_instance.returncode,gld_start_try+1))
                 self.debug.write("  Ack, where did you go? Gridlab immediately exited with code %d"%(self._gld_instance.returncode), self.debug_label)
-                time.sleep(random.uniform(0.01,0.2))
+                time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Started", self.debug_label)
             self.debug.write('  Gridlab: pid=%s port=%d'%(self._gld_instance.pid,self._info.port), self.debug_label)
