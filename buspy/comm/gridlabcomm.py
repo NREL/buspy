@@ -424,7 +424,7 @@ class GridlabCommHttp(GridlabCommBase):
         
         self.GLD_START_TIMEOUT = 60 #sec
         self.GLD_START_CHECK_DELAY = 0.1 #sec
-        self.GLD_START_RETRYS = 6
+        self.GLD_START_RETRYS = 10
         self.GLD_START_LOOP_PAUSE = 1 #sec
         
         atexit.register(GridlabCommHttp._cleanup,self)
@@ -482,12 +482,9 @@ class GridlabCommHttp(GridlabCommBase):
             self.gld_stdout_file = open('stdout', 'w+')
             self.gld_stderr_file = open('stderr', 'w+')
         
-            if (self._info.port == GLD_DEFAULT_PORT):
-                #if the port is -1, find one automatically
-                self._info.port = find_open_tcp_port()
-            elif (gld_start_try > 0):
-                #if we failed last time, try a random port
-                self._info.port = random.randrange(10000,60000)
+            if (self._info.port == GLD_DEFAULT_PORT) or (gld_start_try > 0):
+                #if the port is -1 or if we failed last time, try a random port
+                self._info.port = random.randrange(25000,60000) #new range to not-overlap with global port option in IGMS tool
             arg_list[self.PORT_FLAG] = str(self._info.port)
         
             gld_open_str = self.gridlabd_cmd_args(self._info.filename,*self.dict_to_args(arg_list))
