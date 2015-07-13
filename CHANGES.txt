@@ -1,3 +1,4 @@
 1.0.0 - initial release
 1.0.1 - added gridlabd path option
 1.0.2 - extended set_path for all bus types
+1.0.3 - new parameters for gridlabcomm

@@ -42,7 +42,7 @@ Communication Interface for Smart Distribution Grid Simulations,"
 in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
 [/LICENSE]
 '''
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 import os
 
