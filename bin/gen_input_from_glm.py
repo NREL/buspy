@@ -53,9 +53,52 @@ Created on Apr 27, 2015
 '''
 
 import argparse
+from glmgen.feeder import GlmFile
+from collections import OrderedDict
+
+CMD_ARGS = OrderedDict()
+
+CMD_ARGS['glm_file']    = (
+            [],
+            {
+                'type'  : str,
+                'help'  : 'GridLAB-D glm input filename'
+            }
+)
+
+
+
+
 
 if __name__ == '__main__':
-    pass
+    ####
+    #ARGUMENT PARSER
+    ###
+    parser = argparse.ArgumentParser(description="""Script for adding
+    generating a buspy input JSON file from a GLM.""")
+    
+    #add the arguments from ARGS
+    for key in CMD_ARGS.keys():
+        parser.add_argument(key, *CMD_ARGS[key][0], **CMD_ARGS[key][1])
+     
+    args = parser.parse_args()
+    
+    #load the GLM file
+    glm = GlmFile.load(args.glm_file)
+    
+    #these are nodes in the powerflow
+    print 'NODES'
+    for obj in glm.get_objects_by_type('node'): #glm.itervalues():
+        print obj['name']
+    for obj in glm.get_objects_by_type('load'):
+        print obj['name']
+        
+    print '\nLOADS'
+    #iterate through houses, find children loads
+    for obj in glm.get_objects_by_type('house'):
+        print obj['name']
+        for ch_key in glm.get_children_keys(glm.get_object_key_by_name(obj['name'])):
+            print '\t',glm[ch_key]['name']
 
 
 
