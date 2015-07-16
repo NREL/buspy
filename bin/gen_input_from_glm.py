@@ -55,6 +55,9 @@ Created on Apr 27, 2015
 import argparse
 from glmgen.feeder import GlmFile
 from collections import OrderedDict
+import buspy.comm.message as message
+import buspy.bus as bus
+import os
 
 CMD_ARGS = OrderedDict()
 
@@ -67,7 +70,19 @@ CMD_ARGS['glm_file']    = (
 )
 
 
-
+def get_properties_from_list(in_bus,names,prop):
+    ret = {}
+    inputs = message.MessageCommonData()
+    
+    for name in names:
+        inputs.add_param(message.CommonParam(name=name, param=prop))
+        
+    temp_out = in_bus.transaction(outputs=inputs,overwrite_output=True,trans_state=bus.Bus.TRANSACTION_OUTPUTS)
+    
+    for name in names:
+        ret[name] = temp_out.get_param(name,prop).value
+        
+    return ret
 
 
 if __name__ == '__main__':
@@ -88,17 +103,42 @@ if __name__ == '__main__':
     
     #these are nodes in the powerflow
     print 'NODES'
+    network_nodes = []
     for obj in glm.get_objects_by_type('node'): #glm.itervalues():
         print obj['name']
+        network_nodes.append(obj['name'])
     for obj in glm.get_objects_by_type('load'):
         print obj['name']
+        network_nodes.append(obj['name'])
         
-    print '\nLOADS'
-    #iterate through houses, find children loads
-    for obj in glm.get_objects_by_type('house'):
-        print obj['name']
-        for ch_key in glm.get_children_keys(glm.get_object_key_by_name(obj['name'])):
-            print '\t',glm[ch_key]['name']
+    #set up the IEEE 13-Node bus to test get_properties_from_list
+    ieee_bus = bus.load_bus(path=os.path.dirname(args.glm_file), fname='dist_cont_bus.json')
+        
+    ieee_bus.start_bus()
+    
+    with open(os.path.join(os.path.dirname(args.glm_file),'test_output.txt'),'w') as f:
+        while not ieee_bus.finished:
+            volt_a = get_properties_from_list(ieee_bus,network_nodes,'voltage_A')
+            print ieee_bus.sim_time
+            f.write(str(ieee_bus.sim_time) + '\n')
+            
+            for name,val in volt_a.iteritems():
+                out_str = '\t%s=%s' % (name,str(val))
+                print out_str
+                f.write(out_str + '\n')
+                
+            ieee_bus.transaction(outputs=message.MessageCommonData(),overwrite_output=True)
+        
+    ieee_bus.stop_bus()
+    
+    
+#     print '\nLOADS'
+#     #iterate through houses, find children loads
+#     for obj in glm.get_objects_by_type('house'):
+#         print obj['name']
+#         for ch_key in glm.get_children_keys(glm.get_object_key_by_name(obj['name'])):
+#             print '\t',glm[ch_key]['name']
+
 
 
 
