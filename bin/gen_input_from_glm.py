@@ -1,6 +1,5 @@
 '''
-[LICENSE]
-
+[LICENSE]
 Copyright (c) 2015, Alliance for Sustainable Energy.
 All rights reserved.
 
@@ -40,9 +39,8 @@ If you use this work or its derivatives for research publications, please cite:
 Timothy M. Hansen, Bryan Palmintier, Siddharth Suryanarayanan, 
 Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D 
 Communication Interface for Smart Distribution Grid Simulations," 
-in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
-
-[/LICENSE]
+in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
+[/LICENSE]
 
 Created on Apr 27, 2015
 
@@ -53,7 +51,6 @@ Created on Apr 27, 2015
 '''
 
 import argparse
-from glmgen.feeder import GlmFile
 from collections import OrderedDict
 import buspy.comm.message as message
 import buspy.bus as bus
@@ -97,25 +94,30 @@ if __name__ == '__main__':
         parser.add_argument(key, *CMD_ARGS[key][0], **CMD_ARGS[key][1])
      
     args = parser.parse_args()
-    
-    #load the GLM file
-    glm = GlmFile.load(args.glm_file)
-    
-    #these are nodes in the powerflow
-    print 'NODES'
-    network_nodes = []
-    for obj in glm.get_objects_by_type('node'): #glm.itervalues():
-        print obj['name']
-        network_nodes.append(obj['name'])
-    for obj in glm.get_objects_by_type('load'):
-        print obj['name']
-        network_nodes.append(obj['name'])
+        
+    try: #use glmgen to dynamically find nodes
+        from glmgen.feeder import GlmFile
+         
+        #load the GLM file
+        glm = GlmFile.load(args.glm_file)
+         
+        #these are nodes in the powerflow
+        network_nodes = []
+        for obj in glm.get_objects_by_type('node'): #glm.itervalues():
+            #print obj['name']
+            network_nodes.append(obj['name'])
+        for obj in glm.get_objects_by_type('load'): #workaround because of network issue from glmgen output
+            #print obj['name']
+            network_nodes.append(obj['name'])
+    except: #hardcoded workaround so Umer can run this test code without the glmgen code
+        network_nodes = ['Node633', 'Node630', 'Node632', 'Node680', 'Node684', 'Load646_strip_node', 'Load634', 'Load645', 'Load646', 'Load652', 'Load671', 'Load675', 'Load692', 'Load611', 'Load6711', 'Load6321']
         
     #set up the IEEE 13-Node bus to test get_properties_from_list
     ieee_bus = bus.load_bus(path=os.path.dirname(args.glm_file), fname='dist_cont_bus.json')
         
     ieee_bus.start_bus()
     
+    #get voltage_A at each node at each point in time. 
     with open(os.path.join(os.path.dirname(args.glm_file),'test_output.txt'),'w') as f:
         while not ieee_bus.finished:
             volt_a = get_properties_from_list(ieee_bus,network_nodes,'voltage_A')
