@@ -57,7 +57,7 @@ import os
 import pandas as pds
 import re
     
-class ParamDescriptor:
+class ParamDescriptor(object):
     """
     Information describing a paramter.
     """
@@ -108,7 +108,7 @@ class ParamDescriptor:
         #template value is a little different than default value
         self.template_value = default_value
         if template_value != None:
-            self.template_value = template_value
+            self.template_value = template_value                @property    def parser(self):        return self.__parser            @parser.setter    def parser(self, value):        self.__parser = ExtendedParser(value) if value is not None else None
         
     def __str__(self): 
         return '{:s} - {:s}\n    {:s}{:s}'.format(self.name,
@@ -255,7 +255,7 @@ def create_choice_descriptor(name,
                                 "{:s} {:s}.".format(description_prefix,print_choice_list(choices)),
                                 required,
                                 default_value,
-                                lambda x: parser(x) if parser(x) in choices else None,
+                                lambda x, *args, **kwargs: parser(x, *args, **kwargs) if parser(x, *args, **kwargs) in choices else None,
                                 choices)
         
 class ParamsEncoder(json.JSONEncoder):
@@ -270,7 +270,7 @@ class ParamsEncoder(json.JSONEncoder):
         if isinstance(obj, dt.datetime):
             # serialize dt.datetime as string that can be parsed
             return str(obj)
-        return json.JSONEncoder.default(self,obj)        class ExtendedParamValue(object):    def __init__(self, param_value, parse_args):        self.param_value = param_value        self.parse_args = parse_argsclass Params(dict):
+        return json.JSONEncoder.default(self,obj)        class ExtendedParser(object):    def __init__(self, parser):        self.__parser = parser        self.clear_args()            @property    def bare(self):        return self.__parser        def set_args(self, *args, **kwargs):        self.__args = args        self.__kwargs = kwargs            def clear_args(self):        self.__args = ()        self.__kwargs = {}        def __call__(self, value):        return self.__parser(value, *self.__args, **self.__kwargs)class Params(dict):
     """
     Base class for dictionary-based params with json serialization.
     """
@@ -318,7 +318,7 @@ class ParamsEncoder(json.JSONEncoder):
         # do not use derived method -- use code in __getitem__
         return self.__getitem__(param_name)    
               
-    def __setitem__(self, param_name, param_value):        if param_name in self.__schema:            descriptor = self.__schema[param_name]            actual_value = param_value            parse_args = None            if isinstance(param_value, ExtendedParamValue):                actual_value = param_value.param_value                parse_args = param_value.parse_args            if descriptor.parser is not None:                if parse_args is not None:                    super(Params, self).__setitem__(param_name, descriptor.parser(actual_value, parse_args))                else:                    super(Params, self).__setitem__(param_name, descriptor.parser(actual_value))            else:                super(Params, self).__setitem__(param_name, actual_value)            self.__refresh_schema(param_name)        else:            raise RuntimeError("{:s} is not a valid parameter.".format(param_name))     def to_json_dict(self):
+    def __setitem__(self, param_name, param_value):        if param_name in self.__schema:            descriptor = self.__schema[param_name]            if descriptor.parser is not None:                super(Params, self).__setitem__(param_name, descriptor.parser(param_value))            else:                super(Params, self).__setitem__(param_name, param_value)            self.__refresh_schema(param_name)        else:            raise RuntimeError("{:s} is not a valid parameter.".format(param_name))                def set_parse_args(self, param_name, *parse_args, **parse_kwargs):        if param_name in self.__schema:            self.__schema[param_name].parser.set_args(*parse_args, **parse_kwargs)        else:            raise RuntimeError("{:s} is not a valid parameter.".format(param_name))        def clear_parse_args(self, param_name):        if param_name in self.__schema:            self.__schema[param_name].parser.clear_args()     def to_json_dict(self):
         """
         @rtype: collections.OrderedDict
         @return: 'class_name' and all items in schema-specified order
