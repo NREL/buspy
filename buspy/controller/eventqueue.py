@@ -168,4 +168,7 @@ class ControllerSimulator(object):
             raise EmptyQueue()
 
         return event_time,event
+    
+    def print_statement(self,s):
+        print '[%.3f]: %s' % (self.now,s)
         

@@ -52,6 +52,7 @@ from buspy.controller import Controller
 from buspy.controller import load_controller_from_json
 
 from buspy.controller.eventqueue import ControllerSimulator
+from buspy.controller.eventqueue import EmptyQueue
 
 if __name__ == '__main__':
     #input files
@@ -75,8 +76,30 @@ if __name__ == '__main__':
     #add the set points to the simulator
     controller.add_events(sim)
     
+    #MAIN CONTROL LOOP
+    while not controller.bus.finished:
+        sim.print_statement('New time step')
+        try:
+            #perform setpoints with time <= current time
+            while True:
+                time,_ = sim.peek_event()
+                if time <= sim.current_time:
+                    sim.step()
+                else:
+                    break
+        except EmptyQueue:
+            #no more setpoints, continue the gridlabd simulation
+            sim.print_statement('Event queue is empty, continuing with GridLAB-D')
+        
+        #step gridlabd
+        output = controller.bus.transaction()
+        
+        #NOTE: can pass GLD outputs back to DDES here if we want
+        
+    #perform any output wanted here
     
-    
+    #shutdown the bus
+    controller.bus.stop_bus()
     
     
     

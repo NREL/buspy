@@ -46,18 +46,41 @@ Created on Aug 10, 2015
 @author: thansen
 '''
 
-import buspy.controller.models as models
+from buspy.controller.models import Model
 
-class Load(models.Model):
+class Load(Model):
     '''
-    classdocs
+    TODO: initial setpoint?
     '''
-
+    
+    JSON_STRING = 'LOADS'
+    
+    JSON_SCHEDULE   = 'DemandSchedule'
 
     def __init__(self,name,bus_num,glm_bus_name):
         '''
         Constructor
         '''
-        
         super(Load,self).__init__(name,bus_num,glm_bus_name)
+        
+        
+    def parse_schedule(self,sch):
+        #TODO: Load.parse_schedule
+        super(Load,self).parse_schedule(sch)
+        
+    @staticmethod
+    def json_to_load(json_obj):
+        name,busnum,glmname = Model.json_common_model_params(json_obj)
+        load =  Load(name,busnum,glmname)
+        
+        load.parse_schedule(json_obj[Load.JSON_SCHEDULE])
+        
+        return load
+        
+        
+        
+        
+        
+        
+        
         

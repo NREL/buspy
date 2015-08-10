@@ -50,7 +50,7 @@ from buspy.controller.models import Model
 
 class Battery(Model):
     '''
-    classdocs
+    TODO: implement ramp rates, state of charge calculation, other constraints
     '''
     JSON_STRING = 'STORAGE DEVICES'
     
@@ -77,6 +77,9 @@ class Battery(Model):
         self.charging_efficiency = float(charging_eff)
         self.discharging_efficiency = float(discharging_eff)
         
+    def parse_schedule(self,sch):
+        #TODO: parse_schedule
+        super(Battery,self).parse_schedule(sch)
         
     @staticmethod
     def json_to_battery(json_obj):

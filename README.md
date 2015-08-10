@@ -1,6 +1,8 @@
 bus.py
 =============================
 
+**NOTE:** Before you push new source files to the Git repo, please run add_header.bat to add the proper licensing information.
+
 ### Bus
 
 TODO

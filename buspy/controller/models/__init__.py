@@ -70,7 +70,7 @@ class Model(object):
         self.setpoints = {}
     
     def parse_schedule(self,sch):
-        #TODO
+        #TODO: Model.parse_schedule
         print sch
         
     def update_state(self,time):
@@ -87,12 +87,16 @@ class Model(object):
 
 import battery
 #import generator
-#import load
+import load
+
+from battery import Battery
+from load import Load
 
 
 def json_to_model(json_str,json_obj):
     switch_statement = {
-        battery.Battery.JSON_STRING     : battery.Battery.json_to_battery,
+        Battery.JSON_STRING         : Battery.json_to_battery,
+        Load.JSON_STRING            : Load.json_to_load,
     }
     
     return switch_statement[json_str](json_obj)
