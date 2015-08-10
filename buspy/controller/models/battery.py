@@ -41,72 +41,58 @@ Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D
 Communication Interface for Smart Distribution Grid Simulations," 
 in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
 [/LICENSE]
-Created on Aug 3, 2015
+Created on Aug 10, 2015
 
 @author: thansen
-
-Utility functions for the controller.
 '''
 
-#########################################################
-# GridLAB-D Parameters from GLM File
-#########################################################
+from buspy.controller.models import Model
 
-def get_glm_objects_by_type(glm_obj,type_str):
+class Battery(Model):
     '''
-    Returns a list of glm objects by type.
+    classdocs
     '''
-    return glm_obj.get_objects_by_type(type_str)
-
-def get_glm_property_by_type(glm_obj,type_str,prop):
-    '''
-    Returns a list of a specific property of glm objects by type.
-    '''
-    ret = []
-    for obj in get_glm_objects_by_type(glm_obj,type_str):
-        ret.append(obj[prop])
-    return ret
-
-def get_glm_names_by_type(glm_obj,type_str):
-    '''
-    Returns a list of names of objects of a given type.
-    '''
-    return get_glm_property_by_type(glm_obj,type_str,'name')
-
-
-##########################################################
-# GridLAB-D Parameters from Active GridlabBus Object
-##########################################################
-
-import buspy.comm.message as message
-import buspy.bus as bus
-
-def set_gld_property(in_bus,name,prop,val):
-    output = message.MessageCommonData()
+    JSON_STRING = 'STORAGE DEVICES'
     
-    output.add_param(message.CommonParam(name=name,param=prop, value=val))
     
-    in_bus.send_to_bus(output)
+    JSON_MAXENERGY  = 'MaxEnergy'
+    JSON_MINENERGY  = 'MinEnergy'
+    JSON_MAXCHARGE  = 'MaxChargeSpeed'
+    JSON_MAXDCHARGE = 'MaxDischargeSpeed'
+    JSON_CHARGEFF   = 'ChargingEfficiency'
+    JSON_DCHARGEFF  = 'DischargingEfficiency'
+    
+    JSON_SCHEDULE   = 'StorageSchedule'
 
-def get_gld_properties_from_list(in_bus,names,prop):
-    '''
-    Returns a list of properties in the same order as the list of specified names.
-    
-    @param in_bus : an initialized Bus object
-    @param names  : a list of GridLAB-D object name strings
-    @param prop   : a string of the property name to get
-    '''
-    ret = {}
-    inputs = message.MessageCommonData()
-    
-    for name in names:
-        inputs.add_param(message.CommonParam(name=name, param=prop))
+    def __init__(self,name,bus_num,glm_bus_name,min_energy,max_energy,
+                 max_charge_speed,max_discharge_speed,charging_eff,discharging_eff):
+        '''
+        Constructor
+        '''
+        super(Battery,self).__init__(name,bus_num,glm_bus_name)
+        self.min_energy = float(min_energy)
+        self.max_energy = float(max_energy)
+        self.max_charge_speed = float(max_charge_speed)
+        self.max_dcharge_speed = float(max_discharge_speed)
+        self.charging_efficiency = float(charging_eff)
+        self.discharging_efficiency = float(discharging_eff)
         
-    temp_out = in_bus.transaction(outputs=inputs,overwrite_output=True,trans_state=bus.Bus.TRANSACTION_OUTPUTS)
-    
-    for name in names:
-        ret[name] = temp_out.get_param(name,prop).value
         
-    return ret
+    @staticmethod
+    def json_to_battery(json_obj):
+        name,busnum,glmname = Model.json_common_model_params(json_obj)
+        batt =  Battery(name,busnum,glmname,
+                       json_obj[Battery.JSON_MAXENERGY],
+                       json_obj[Battery.JSON_MINENERGY],
+                       json_obj[Battery.JSON_MAXCHARGE],
+                       json_obj[Battery.JSON_MAXDCHARGE],
+                       float(json_obj[Battery.JSON_CHARGEFF])/100.0,
+                       float(json_obj[Battery.JSON_DCHARGEFF])/100.0)
+        
+        batt.parse_schedule(json_obj[Battery.JSON_SCHEDULE])
+        
+        return batt
 
-
+        
+        
+        

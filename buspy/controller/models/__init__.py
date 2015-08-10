@@ -41,72 +41,59 @@ Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D
 Communication Interface for Smart Distribution Grid Simulations," 
 in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
 [/LICENSE]
-Created on Aug 3, 2015
+Created on Aug 10, 2015
 
 @author: thansen
-
-Utility functions for the controller.
 '''
 
-#########################################################
-# GridLAB-D Parameters from GLM File
-#########################################################
+from buspy.controller.utils import set_gld_property
 
-def get_glm_objects_by_type(glm_obj,type_str):
-    '''
-    Returns a list of glm objects by type.
-    '''
-    return glm_obj.get_objects_by_type(type_str)
-
-def get_glm_property_by_type(glm_obj,type_str,prop):
-    '''
-    Returns a list of a specific property of glm objects by type.
-    '''
-    ret = []
-    for obj in get_glm_objects_by_type(glm_obj,type_str):
-        ret.append(obj[prop])
-    return ret
-
-def get_glm_names_by_type(glm_obj,type_str):
-    '''
-    Returns a list of names of objects of a given type.
-    '''
-    return get_glm_property_by_type(glm_obj,type_str,'name')
-
-
-##########################################################
-# GridLAB-D Parameters from Active GridlabBus Object
-##########################################################
-
-import buspy.comm.message as message
-import buspy.bus as bus
-
-def set_gld_property(in_bus,name,prop,val):
-    output = message.MessageCommonData()
+class Model(object):
+    PHASE_A = 1
+    PHASE_B = 2
+    PHASE_C = 3
     
-    output.add_param(message.CommonParam(name=name,param=prop, value=val))
+    #JSON IDs
+    JSON_NAME       = 'Name'
+    JSON_BUSNUM     = 'BusNum'
+    JSON_GLMBUS     = 'GLMBusName'
     
-    in_bus.send_to_bus(output)
-
-def get_gld_properties_from_list(in_bus,names,prop):
-    '''
-    Returns a list of properties in the same order as the list of specified names.
+    JSON_SCH_TIME   = 'Time'
+    JSON_SCH_SET    = 'SetPoint'
     
-    @param in_bus : an initialized Bus object
-    @param names  : a list of GridLAB-D object name strings
-    @param prop   : a string of the property name to get
-    '''
-    ret = {}
-    inputs = message.MessageCommonData()
-    
-    for name in names:
-        inputs.add_param(message.CommonParam(name=name, param=prop))
+    def __init__(self,name,bus_num,glm_bus_name):
+        self.name = name
+        self.bus_num = bus_num
+        self.glm_bus_name = glm_bus_name
         
-    temp_out = in_bus.transaction(outputs=inputs,overwrite_output=True,trans_state=bus.Bus.TRANSACTION_OUTPUTS)
+        #format: parameter:value to be sent to gridlabd as name.parameter=value
+        self.setpoints = {}
     
-    for name in names:
-        ret[name] = temp_out.get_param(name,prop).value
+    def parse_schedule(self,sch):
+        #TODO
+        print sch
         
-    return ret
+    def update_state(self,time):
+        raise Exception('subclasses of Model need to implement update_state')
+    
+    def setpoints(self,bus):
+        for param,val in self.setpoints.iteritems():
+            set_gld_property(bus,self.name,param,val)
+    
+    @staticmethod
+    def json_common_model_params(json_obj):
+        return json_obj[Model.JSON_NAME], json_obj[Model.JSON_BUSNUM], json_obj[Model.JSON_GLMBUS] 
+    
+
+import battery
+#import generator
+#import load
 
 
+def json_to_model(json_str,json_obj):
+    switch_statement = {
+        battery.Battery.JSON_STRING     : battery.Battery.json_to_battery,
+    }
+    
+    return switch_statement[json_str](json_obj)
+    

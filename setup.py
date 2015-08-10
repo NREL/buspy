@@ -35,7 +35,7 @@ setup(
     packages=['buspy',
               'buspy.analyze', 'buspy.analyze.loaders',
               'buspy.comm','buspy.utils',
-              'buspy.construct'],
+              'buspy.construct',              'buspy.controller','buspy.controller.models'],
     scripts=['bin/add_header.py'],
     url='http://www.engr.colostate.edu/sgra', #TODO: replace with github
     license='LICENSE.txt',

@@ -460,6 +460,11 @@ class Bus(object):
         
         return _out
     
+    def send_to_bus(self,inputs):
+        if inputs != None:
+            #send the new inputs
+            self._local_bus_send(inputs)
+    
     def get_time(self):
         return self.sim_time.current_time
     

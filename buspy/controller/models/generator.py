@@ -41,72 +41,23 @@ Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D
 Communication Interface for Smart Distribution Grid Simulations," 
 in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
 [/LICENSE]
-Created on Aug 3, 2015
+Created on Aug 10, 2015
 
 @author: thansen
-
-Utility functions for the controller.
 '''
 
-#########################################################
-# GridLAB-D Parameters from GLM File
-#########################################################
+import buspy.controller.models as models
 
-def get_glm_objects_by_type(glm_obj,type_str):
+class Generator(models.Model):
     '''
-    Returns a list of glm objects by type.
+    classdocs
     '''
-    return glm_obj.get_objects_by_type(type_str)
-
-def get_glm_property_by_type(glm_obj,type_str,prop):
-    '''
-    Returns a list of a specific property of glm objects by type.
-    '''
-    ret = []
-    for obj in get_glm_objects_by_type(glm_obj,type_str):
-        ret.append(obj[prop])
-    return ret
-
-def get_glm_names_by_type(glm_obj,type_str):
-    '''
-    Returns a list of names of objects of a given type.
-    '''
-    return get_glm_property_by_type(glm_obj,type_str,'name')
 
 
-##########################################################
-# GridLAB-D Parameters from Active GridlabBus Object
-##########################################################
-
-import buspy.comm.message as message
-import buspy.bus as bus
-
-def set_gld_property(in_bus,name,prop,val):
-    output = message.MessageCommonData()
-    
-    output.add_param(message.CommonParam(name=name,param=prop, value=val))
-    
-    in_bus.send_to_bus(output)
-
-def get_gld_properties_from_list(in_bus,names,prop):
-    '''
-    Returns a list of properties in the same order as the list of specified names.
-    
-    @param in_bus : an initialized Bus object
-    @param names  : a list of GridLAB-D object name strings
-    @param prop   : a string of the property name to get
-    '''
-    ret = {}
-    inputs = message.MessageCommonData()
-    
-    for name in names:
-        inputs.add_param(message.CommonParam(name=name, param=prop))
+    def __init__(self,name,bus_num,glm_bus_name):
+        '''
+        Constructor
+        '''
         
-    temp_out = in_bus.transaction(outputs=inputs,overwrite_output=True,trans_state=bus.Bus.TRANSACTION_OUTPUTS)
-    
-    for name in names:
-        ret[name] = temp_out.get_param(name,prop).value
+        super(Generator,self).__init__(name,bus_num,glm_bus_name)
         
-    return ret
-
-
