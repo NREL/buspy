@@ -51,6 +51,7 @@ from buspy.controller.models import Model
 class Battery(Model):
     '''
     TODO: implement ramp rates, state of charge calculation, other constraints
+    TODO: I think Battery should inherit Load as it will most likely set the same GLD param (ZIPload base_power)
     '''
     JSON_STRING = 'STORAGE DEVICES'
     
@@ -80,9 +81,9 @@ class Battery(Model):
         
         self.soc = initial_soc
         
-    def parse_schedule(self,sch):
+    def parse_schedule(self,sch,param):
         #TODO: parse_schedule
-        super(Battery,self).parse_schedule(sch)
+        super(Battery,self).parse_schedule(sch,param)
         
     @staticmethod
     def json_to_battery(json_obj,start_time):
@@ -95,7 +96,8 @@ class Battery(Model):
                        float(json_obj[Battery.JSON_CHARGEFF])/100.0,
                        float(json_obj[Battery.JSON_DCHARGEFF])/100.0)
         
-        batt.parse_schedule(json_obj[Battery.JSON_SCHEDULE])
+        #TODO: what parameter will battery change?
+        batt.parse_schedule(json_obj[Battery.JSON_SCHEDULE],'TEMPORARY')
         
         return batt
 

@@ -69,8 +69,8 @@ class Load(Model):
         self.current_load = initial_value
         
         
-    def parse_schedule(self,sch):
-        super(Load,self).parse_schedule(sch,Load.KEY_GLD_PARAM)
+    def parse_schedule(self,sch,param):
+        super(Load,self).parse_schedule(sch,param)
         
     def _local_update(self,setpoint):
         self.current_load = setpoint.value
@@ -81,13 +81,23 @@ class Load(Model):
         name,busnum,glmname = Model.json_common_model_params(json_obj)
         load =  Load(name,busnum,glmname,start_time)
         
-        load.parse_schedule(json_obj[Load.JSON_SCHEDULE])
+        load.parse_schedule(json_obj[Load.JSON_SCHEDULE],Load.KEY_GLD_PARAM)
         
         return load
         
         
         
-        
+#TODO: 3-phase load. 'base_power_A', etc.
+#TODO: imaginary load. 'base_power' = sqrt(P^2 + Q^2), 'power_pf' = cos(tan^-1(Q/P))
+#TODO: 3-phase load with imaginary. 'base_power_A', 'power_pf_A', etc.
+
+'''
+try:
+    pf = cos(tan^-1(Q/P))
+except ZeroDivisionError:
+    #if P=0, pf=0 (purely reactive power injection)
+    pf = 0.0
+'''
         
         
         

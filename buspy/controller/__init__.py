@@ -63,7 +63,6 @@ from buspy.controller.eventqueue import CRITICAL
 
 class SetpointEvent(Event):
     def __init__(self,simulator,controller,model,setpoint):
-        #TODO: setpoint, model
         super(SetpointEvent,self).__init__(simulator)
         self.controller = controller
         self.model = model
@@ -72,6 +71,7 @@ class SetpointEvent(Event):
     def execute(self):
         new_setpoint = self.model.update_state(self.simulator.current_time,self.setpoint)
         self.controller.send_setpoint(new_setpoint)
+        #can turn this print off if it gets too verbose.
         self.simulator.print_statement(str(new_setpoint))
         
 class GridlabTimeUpdateEvent(Event):
@@ -115,7 +115,7 @@ class Controller(object):
         utils.send_param(self.bus, setpoint)
         
     def add_events(self,simulator):
-        #TODO: this only works if there is one setpoint per model per time. Fix this workflow!
+        #TODO: this only works if there is one setpoint per model per time. Fix this workflow! -TMH
         #iterate through model schedules and add events for each change in set point
         for m in self.models.itervalues(): 
             set_keys = m.setpoints.keys()

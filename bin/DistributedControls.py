@@ -56,7 +56,7 @@ from buspy.controller.eventqueue import EmptyQueue
 
 if __name__ == '__main__':
     #input files
-    os.chdir('C:\\Research\\Code\\Git\\buspy-public\\bin\\test_data\\')
+    os.chdir('test_data')
     bus_json = 'dist_cont_bus.json'
     control_json = 'DDESResultsIGMS.json'
     
@@ -87,23 +87,25 @@ if __name__ == '__main__':
             while True:
                 time,_ = sim.peek_event()
                 
+                #convert current GLD time to seconds from start of simulation to compare against the event time
                 if time <= sim.get_seconds_from_start(controller.bus.sim_time.current_time):
                     sim.step()
                 else:
                     break
         except EmptyQueue:
             #no more setpoints, continue the gridlabd simulation
-            sim.print_statement('Event queue is empty, continuing with GridLAB-D')
+            #sim.print_statement('Event queue is empty, continuing with GridLAB-D')
+            pass
         
         #step gridlabd
         output = controller.bus.transaction()
         
-        #NOTE: can pass GLD outputs back to DDES here if we want
+        #<---------------- NOTE: can pass GLD outputs back to DDES here if we want
         
         #sync GLD and discrete event simulator times
         gld_sync.schedule(controller.bus.sim_time.current_time)
         
-    #perform any output wanted here
+    #<------------ perform any output wanted here
     
     #shutdown the bus
     controller.bus.stop_bus()
