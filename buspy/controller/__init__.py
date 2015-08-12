@@ -59,6 +59,7 @@ import os
 import json
 import models
 from buspy.controller.eventqueue import Event
+from buspy.controller.eventqueue import CRITICAL
 
 class SetpointEvent(Event):
     def __init__(self,simulator,controller,model,setpoint):
@@ -72,6 +73,16 @@ class SetpointEvent(Event):
         new_setpoint = self.model.update_state(self.simulator.current_time,self.setpoint)
         self.controller.send_setpoint(new_setpoint)
         self.simulator.print_statement(str(new_setpoint))
+        
+class GridlabTimeUpdateEvent(Event):
+    '''
+    Used to sync the discrete event simulator time and GLD
+    '''
+    def __init__(self,simulator):
+        super(GridlabTimeUpdateEvent,self).__init__(simulator,CRITICAL)
+        
+    def execute(self):
+        pass
 
 class Controller(object):
     def __init__(self,gridlab_bus):

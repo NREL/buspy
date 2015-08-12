@@ -103,7 +103,7 @@ class Event(object):
         raise NotImplemented('Subclasses of Event must implement execute')
     
     def schedule(self,time,abs_time=False):
-        self.env.schedule(self,time=time,abs_time=abs_time)
+        self.simulator.schedule(self,time=time,abs_time=abs_time)
 
 
 ###########################################################################

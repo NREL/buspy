@@ -48,7 +48,7 @@ Created on Aug 10, 2015
 
 import os
 
-from buspy.controller import Controller
+from buspy.controller import GridlabTimeUpdateEvent
 from buspy.controller import load_controller_from_json
 
 from buspy.controller.eventqueue import ControllerSimulator
@@ -76,6 +76,9 @@ if __name__ == '__main__':
     #add the set points to the simulator
     controller.add_events(sim)
     
+    #create the GLD sync event
+    gld_sync = GridlabTimeUpdateEvent(sim)
+    
     #MAIN CONTROL LOOP
     while not controller.bus.finished:
         sim.print_statement('New time step. Current gld time: %s' % str(controller.bus.sim_time.current_time))
@@ -96,6 +99,9 @@ if __name__ == '__main__':
         output = controller.bus.transaction()
         
         #NOTE: can pass GLD outputs back to DDES here if we want
+        
+        #sync GLD and discrete event simulator times
+        gld_sync.schedule(controller.bus.sim_time.current_time)
         
     #perform any output wanted here
     
