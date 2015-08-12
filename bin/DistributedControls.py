@@ -58,7 +58,7 @@ if __name__ == '__main__':
     #input files
     os.chdir('C:\\Research\\Code\\Git\\buspy-public\\bin\\test_data\\')
     bus_json = 'dist_cont_bus.json'
-    control_json = 'DDESResults_temp.json'
+    control_json = 'DDESResultsIGMS.json'
     
     #load controller
     controller = load_controller_from_json(bus_json)
@@ -71,19 +71,20 @@ if __name__ == '__main__':
     sim = ControllerSimulator(start_time)
     
     #!!!!!!!!!obtain set points from DDES here!!!!!!!!!!!!!!
-    controller.set_gld_from_json_file(control_json)
+    controller.set_gld_from_json_file(control_json,sim.current_time)
     
     #add the set points to the simulator
     controller.add_events(sim)
     
     #MAIN CONTROL LOOP
     while not controller.bus.finished:
-        sim.print_statement('New time step')
+        sim.print_statement('New time step. Current gld time: %s' % str(controller.bus.sim_time.current_time))
         try:
             #perform setpoints with time <= current time
             while True:
                 time,_ = sim.peek_event()
-                if time <= sim.current_time:
+                
+                if time <= sim.get_seconds_from_start(controller.bus.sim_time.current_time):
                     sim.step()
                 else:
                     break

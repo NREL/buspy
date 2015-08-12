@@ -55,8 +55,27 @@ Edited by Tim Hansen for development of the controller module.
 
 import json
 import collections
+import numpy as np
+import pandas as pd
+from buspy.controller.eventqueue import diff_seconds_from_dates
+from buspy.controller.eventqueue import add_seconds_to_date
+from buspy.controller.models import Model
  
-filename = "DDESResults.json"
+filename = "DDESResultsIGMS.json"
+
+def generate_sch(mean,std,start_date=pd.to_datetime('2020-04-16 00:00:00'),end_date=pd.to_datetime('2020-04-17 00:00:00'),num_points=24):
+    ret = []
+    
+    delta_s = diff_seconds_from_dates(start_date,end_date) / float(num_points)
+    cur_time = start_date
+    for i in range(num_points):
+        setpoint = {}
+        setpoint[Model.JSON_SCH_TIME] = str(cur_time)
+        setpoint[Model.JSON_SCH_SET] = np.random.normal(mean,std)
+        ret.append(setpoint)
+        cur_time = add_seconds_to_date(cur_time,delta_s)
+        
+    return ret
 
 data = collections.OrderedDict()
 
@@ -185,21 +204,21 @@ load1['Name'] = 'Load1'
 load1['BusNum'] = 7
 load1['GLMBusName'] = 'Load647'
 
-demandForecastList1 = [(1,1,1), (2,2,2), (3,3,3), (4,4,4), (5,5,5), (6,6,6), (7,7,7), (8,8,8), (9,9,9), (10,10,10), (11,11,11), (12,12,12), (13,13,13), (14,14,14), (15,15,15), (16,16,16), (17,17,17), (18,18,18), (19,19,19), (20,20,20), (21,21,21), (22,22,22), (23,23,23), (24,24,24)]
+demandForecastList1 = generate_sch(1000.0,100.0)#[(1,1,1), (2,2,2), (3,3,3), (4,4,4), (5,5,5), (6,6,6), (7,7,7), (8,8,8), (9,9,9), (10,10,10), (11,11,11), (12,12,12), (13,13,13), (14,14,14), (15,15,15), (16,16,16), (17,17,17), (18,18,18), (19,19,19), (20,20,20), (21,21,21), (22,22,22), (23,23,23), (24,24,24)]
 
-load1['DemandForecast'] = demandForecastList1
+load1['DemandSchedule'] = demandForecastList1
 
 loadList.append(load1)
 
 load2 = collections.OrderedDict()
 
-load2['Name'] = 'Load1'
+load2['Name'] = 'Load2'
 load2['BusNum'] = 9
 load2['GLMBusName'] = 'Load649'
 
-demandForecastList2 = [(1,1,1), (2,2,2), (3,3,3), (4,4,4), (5,5,5), (6,6,6), (7,7,7), (8,8,8), (9,9,9), (10,10,10), (11,11,11), (12,12,12), (13,13,13), (14,14,14), (15,15,15), (16,16,16), (17,17,17), (18,18,18), (19,19,19), (20,20,20), (21,21,21), (22,22,22), (23,23,23), (24,24,24)]
+demandForecastList2 = generate_sch(2500.0,500.0)#[(1,1,1), (2,2,2), (3,3,3), (4,4,4), (5,5,5), (6,6,6), (7,7,7), (8,8,8), (9,9,9), (10,10,10), (11,11,11), (12,12,12), (13,13,13), (14,14,14), (15,15,15), (16,16,16), (17,17,17), (18,18,18), (19,19,19), (20,20,20), (21,21,21), (22,22,22), (23,23,23), (24,24,24)]
 
-load2['DemandForecast'] = demandForecastList2
+load2['DemandSchedule'] = demandForecastList2
 
 loadList.append(load2)
 

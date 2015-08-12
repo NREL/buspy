@@ -81,12 +81,13 @@ def get_glm_names_by_type(glm_obj,type_str):
 import buspy.comm.message as message
 import buspy.bus as bus
 
-def set_gld_property(in_bus,name,prop,val):
+def send_param(in_bus,param):
     output = message.MessageCommonData()
-    
-    output.add_param(message.CommonParam(name=name,param=prop, value=val))
-    
+    output.add_param(param)
     in_bus.send_to_bus(output)
+
+def set_gld_property(in_bus,name,prop,val):
+    send_param(in_bus,message.CommonParam(name=name,param=prop, value=val))
 
 def get_gld_properties_from_list(in_bus,names,prop):
     '''

@@ -171,6 +171,9 @@ class CommonParam(object):
             return 
         else:
             return not ret
+        
+    def __str__(self):
+        return '%s.%s=%s' % (str(self.name),str(self.param),str(self.value))
 
         
 #####################################################

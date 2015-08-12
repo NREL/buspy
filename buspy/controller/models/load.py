@@ -56,22 +56,30 @@ class Load(Model):
     JSON_STRING = 'LOADS'
     
     JSON_SCHEDULE   = 'DemandSchedule'
+    
+    
+    KEY_GLD_PARAM = 'base_power'
 
-    def __init__(self,name,bus_num,glm_bus_name):
+    def __init__(self,name,bus_num,glm_bus_name,start_time,initial_value=0.0):
         '''
         Constructor
         '''
-        super(Load,self).__init__(name,bus_num,glm_bus_name)
+        super(Load,self).__init__(name,bus_num,glm_bus_name,start_time)
+        
+        self.current_load = initial_value
         
         
     def parse_schedule(self,sch):
-        #TODO: Load.parse_schedule
-        super(Load,self).parse_schedule(sch)
+        super(Load,self).parse_schedule(sch,Load.KEY_GLD_PARAM)
+        
+    def _local_update(self,setpoint):
+        self.current_load = setpoint.value
+        return setpoint
         
     @staticmethod
-    def json_to_load(json_obj):
+    def json_to_load(json_obj,start_time):
         name,busnum,glmname = Model.json_common_model_params(json_obj)
-        load =  Load(name,busnum,glmname)
+        load =  Load(name,busnum,glmname,start_time)
         
         load.parse_schedule(json_obj[Load.JSON_SCHEDULE])
         

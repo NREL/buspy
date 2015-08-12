@@ -94,9 +94,9 @@ def add_seconds_to_date(date, secs):
 ###########################################################################
 
 class Event(object):
-    def __init__(self,env,priority=NORMAL):
+    def __init__(self,simulator,priority=NORMAL):
         #common code and functionality here
-        self.env = env
+        self.simulator = simulator
         self.priority = priority
         
     def execute(self):
@@ -131,9 +131,6 @@ class ControllerSimulator(object):
         
         
     def schedule(self,event,time=0,abs_time=False):
-        sch_time = time if abs_time else self.now + time
-        heappush(self.event_queue,(sch_time, event.priority, next(self.eid), event))
-        
         if isinstance(time,int) or isinstance(time,float):
             self.__schedule(event,time,abs_time)
         else:
@@ -169,6 +166,9 @@ class ControllerSimulator(object):
 
         return event_time,event
     
+    def get_seconds_from_start(self,date):
+        return diff_seconds_from_dates(self.start_time,date)
+    
     def print_statement(self,s):
-        print '[%.3f]: %s' % (self.now,s)
+        print '[%s]: %s' % (self.current_time,s)
         

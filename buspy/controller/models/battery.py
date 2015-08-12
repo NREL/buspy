@@ -64,12 +64,13 @@ class Battery(Model):
     
     JSON_SCHEDULE   = 'StorageSchedule'
 
-    def __init__(self,name,bus_num,glm_bus_name,min_energy,max_energy,
-                 max_charge_speed,max_discharge_speed,charging_eff,discharging_eff):
+    def __init__(self,name,bus_num,glm_bus_name,min_energy,max_energy,start_time,
+                 max_charge_speed,max_discharge_speed,charging_eff,discharging_eff,
+                 initial_soc=0.5):
         '''
         Constructor
         '''
-        super(Battery,self).__init__(name,bus_num,glm_bus_name)
+        super(Battery,self).__init__(name,bus_num,glm_bus_name,start_time)
         self.min_energy = float(min_energy)
         self.max_energy = float(max_energy)
         self.max_charge_speed = float(max_charge_speed)
@@ -77,14 +78,16 @@ class Battery(Model):
         self.charging_efficiency = float(charging_eff)
         self.discharging_efficiency = float(discharging_eff)
         
+        self.soc = initial_soc
+        
     def parse_schedule(self,sch):
         #TODO: parse_schedule
         super(Battery,self).parse_schedule(sch)
         
     @staticmethod
-    def json_to_battery(json_obj):
+    def json_to_battery(json_obj,start_time):
         name,busnum,glmname = Model.json_common_model_params(json_obj)
-        batt =  Battery(name,busnum,glmname,
+        batt =  Battery(name,busnum,glmname,start_time,
                        json_obj[Battery.JSON_MAXENERGY],
                        json_obj[Battery.JSON_MINENERGY],
                        json_obj[Battery.JSON_MAXCHARGE],

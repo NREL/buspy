@@ -53,12 +53,25 @@ currently paused).
 
 from __future__ import print_function
 import buspy.bus as bus
-from glmgen.feeder import GlmFile
+#from glmgen.feeder import GlmFile
 import utils
 import os
 import json
 import models
 from buspy.controller.eventqueue import Event
+
+class SetpointEvent(Event):
+    def __init__(self,simulator,controller,model,setpoint):
+        #TODO: setpoint, model
+        super(SetpointEvent,self).__init__(simulator)
+        self.controller = controller
+        self.model = model
+        self.setpoint = setpoint
+        
+    def execute(self):
+        new_setpoint = self.model.update_state(self.simulator.current_time,self.setpoint)
+        self.controller.send_setpoint(new_setpoint)
+        self.simulator.print_statement(str(new_setpoint))
 
 class Controller(object):
     def __init__(self,gridlab_bus):
@@ -68,36 +81,36 @@ class Controller(object):
         assert isinstance(gridlab_bus,bus.GridlabBus)
         
         self.bus = gridlab_bus
-        self.glm = GlmFile.load(self.bus._comm._info.filename)
+        #self.glm = GlmFile.load(self.bus._comm._info.filename)
         
-    def set_gld_from_json_str(self,json_str):
+    def set_gld_from_json_str(self,json_str,time=None):
         set_points = json.loads(json_str)
         self.models = {}
+        
+        cur_time = self.bus.sim_time.current_time if time == None else time
 
         for model_type,model_arr in set_points.iteritems():
             for json_obj in model_arr:
-                model = models.json_to_model(model_type, json_obj)
+                model = models.json_to_model(model_type, json_obj,cur_time)
                 self.models[model.name] = model
     
     
-    def set_gld_from_json_file(self,json_file):
+    def set_gld_from_json_file(self,json_file,time=None):
         with open(json_file) as f:
             s = f.read()
-        self.set_gld_from_json_str(s)
+        self.set_gld_from_json_str(s,time)
+        
+    def send_setpoint(self,setpoint):
+        utils.send_param(self.bus, setpoint)
         
     def add_events(self,simulator):
+        #TODO: this only works if there is one setpoint per model per time. Fix this workflow!
         #iterate through model schedules and add events for each change in set point
-        pass
-    
-class SetpointEvent(Event):
-    def __init__(self,simulator,controller):
-        #TODO: setpoint, model
-        super(SetpointEvent,self).__init__(simulator)
-        self.controller = controller
-        
-    def execute(self):
-        #TODO: pass the setpoint to gridlabd
-        pass
+        for m in self.models.itervalues(): 
+            set_keys = m.setpoints.keys()
+            for i_key in set_keys: #the key is also the time to change the setpoint
+                setpoint = m.setpoints.pop(i_key)
+                simulator.schedule(SetpointEvent(simulator,self,m,setpoint),time=i_key)
         
         
 def load_controller_from_json(bus_json_file,path='.'):
