@@ -1,5 +1,5 @@
-'''
-[LICENSE]
+'''
+[LICENSE]
 Copyright (c) 2015, Alliance for Sustainable Energy.
 All rights reserved.
 
@@ -39,9 +39,9 @@ If you use this work or its derivatives for research publications, please cite:
 Timothy M. Hansen, Bryan Palmintier, Siddharth Suryanarayanan, 
 Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D 
 Communication Interface for Smart Distribution Grid Simulations," 
-in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
-[/LICENSE]
-'''
+in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
+[/LICENSE]
+'''
 __version__ = '1.1.0'
 
 import os
