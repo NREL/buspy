@@ -2,3 +2,4 @@
 1.0.1 - added gridlabd path option
 1.0.2 - extended set_path for all bus types
 1.0.3 - new parameters for gridlabcomm
+1.1.0 - support for generalized arguments to parser functors (in buspy.construct.base.Params)

@@ -45,13 +45,13 @@ in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
 from unittest import TestCase
 import os
 import numpy as np
-from bus.bus import open_bus
-from bus.bus import AggregatorBusTranslator
-import bus.comm.message as message
-from bus.bus import load_bus
-from bus.bus import set_default_bus
-from bus.bus import ConstantBus
-from bus.construct.bus_params import BusParams
+from buspy.bus import open_bus
+from buspy.bus import AggregatorBusTranslator
+import buspy.comm.message as message
+from buspy.bus import load_bus
+from buspy.bus import set_default_bus
+from buspy.bus import ConstantBus
+from buspy.construct.bus_params import BusParams
 
 #in case mpi4py is not setup properly
 try:
