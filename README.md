@@ -1,8 +1,15 @@
 bus.py
 =============================
 
-TODO: proper readme.md
+#### Install
 
+`pip install git+https://github.com/NREL/buspy.git@master`
+
+or
+
+`pip install git+https://github.com/NREL/buspy.git@v1.1.0`
+
+Previous versions are listed at https://github.com/NREL/buspy/releases.
 
 ### Citation
 
