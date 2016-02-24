@@ -61,12 +61,12 @@ class auction {
 }
 
 //BusPy will set this in IGMS
-//object player {
-//	name MarketPlayer;
-//	parent RTP_Market;
-//	property fixed_price;
-//	file market.player;
-//}
+object player {
+	name MarketPlayer;
+	parent RTP_Market;
+	property fixed_price;
+	file market.player;
+}
 
 //market
 object auction {
@@ -75,7 +75,7 @@ object auction {
 	unit MWh;
 	period 3600;
 	verbose FALSE; //TRUE;
-	special_mode BUYERS_ONLY; //no demand bids, set supply price. This is what buspy should set (fixed_price)
+	special_mode BUYERS_ONLY; //no demand bids, set supply price. This is what buspy should set
 	warmup 0;
 	init_price 18.99;
 	init_stdev 1e-6;
