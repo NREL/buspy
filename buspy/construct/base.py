@@ -218,7 +218,7 @@ def create_choice_descriptor(name,
                              description_prefix,
                              required=True,
                              default_value=None,
-                             parser=None):
+                             parser=None,                             multi_select=False):
     """
     Helper method for describing parameters whose values should be chosen from a list.
     
@@ -242,21 +242,7 @@ def create_choice_descriptor(name,
     @param parser: Function for processing individual parameter values into standard form.
     
     @rtype: ParamDescriptor
-    """
-    if parser is None:
-        return  ParamDescriptor(name,
-                                "{:s} {:s}.".format(description_prefix,print_choice_list(choices)),
-                                required,
-                                default_value,
-                                lambda x: x if x in choices else None,
-                                choices)
-    else:
-        return  ParamDescriptor(name,
-                                "{:s} {:s}.".format(description_prefix,print_choice_list(choices)),
-                                required,
-                                default_value,
-                                lambda x, *args, **kwargs: parser(x, *args, **kwargs) if parser(x, *args, **kwargs) in choices else None,
-                                choices)
+    """    def default_parser(x, multi_select = False):        if multi_select:            if isinstance(x, list):                return [xx for xx in x if xx in choices]            else:                return [x] if x in choices else None        return x if x in choices else None        def amended_parser(x, multi_select, parser, *args, **kwargs):        if multi_select:            if isinstance(x, list):                return [parser(xx, *args, **kwargs) for xx in x if parser(xx, *args, **kwargs) in choices]            else:                return [parser(x, *args, **kwargs) if parser(x, *args, **kwargs) in choices else None]        return parser(x, *args, **kwargs) if parser(x, *args, **kwargs) in choices else None        parser_to_use = None    if parser is None:        parser_to_use = lambda x: default_parser(x, multi_select)    else:        parser_to_use = lambda x, *args, **kwargs: amended_parser(x, multi_select, parser, *args, **kwargs)            return  ParamDescriptor(name,                            "{:s} {:s}.".format(description_prefix,print_choice_list(choices)),                            required,                            default_value,                            parser_to_use,                            choices,                            n = '*' if multi_select else None)
         
 class ParamsEncoder(json.JSONEncoder):
     """
@@ -383,11 +369,7 @@ class ParamsEncoder(json.JSONEncoder):
         f.close()
   
     def valid(self): 
-        for param_name, descriptor in self.__schema.items():
-            if descriptor.required:
-                if self.get(param_name) is None:
-                    return False
-        return True
+        return (not self.invalid_params())            def invalid_params(self):        result = []        for param_name, descriptor in self.__schema.items():            if descriptor.required:                if self.get(param_name) is None:                    result.append(param_name)        return result
     
     def sorted_items(self): 
         return sorted(self.items(), key=lambda pair: list(self.__schema.keys()).index(pair[0]))
@@ -429,8 +411,8 @@ class Creator:
         Base class create method to be called by derived class create method to 
         conduct runtime checks on parameters.
         """
-        if not self.params.valid():
-            raise RuntimeError("Cannot create with invalid parameters:\n{:s}".format(self.params))
+        if not self.params.valid():            msg = ""            schema = self.params.schema()            for invalid_param in self.params.invalid_params():                msg += "{}: {}\n\n".format(invalid_param, self.params[invalid_param] if invalid_param in self.params else None)                msg += "{}\n\n".format(schema[invalid_param])
+            raise RuntimeError("Cannot create with invalid parameters:\n{:s}".format(msg))
     
     def to_json_dict(self): 
         return OrderedDict({"class_name": self.get_class_name(),
