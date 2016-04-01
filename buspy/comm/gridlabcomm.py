@@ -495,8 +495,8 @@ class GridlabCommHttp(GridlabCommBase):
             try:    
                 self._gld_instance = subprocess.Popen(gld_open_str,shell=False,stderr=self.gld_stderr_file,stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX)
             except Exception as e:
-                print("%s: Uh Oh, Gld Popen problem (try %d)"%(socket.gethostname(),gld_start_try+1))
-                self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s)"%(sys.exc_info()[0],str(e)), self.debug_label)
+                print("%s: Uh Oh, Gld Popen problem (try %d): %s"%(socket.gethostname(),gld_start_try+1), gld_open_str)
+                self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s) for %s"%(sys.exc_info()[0],str(e)), self.debug_label, gld_open_str)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Popen complete", self.debug_label)
@@ -507,8 +507,8 @@ class GridlabCommHttp(GridlabCommBase):
             #Make sure gridlabd is actually running
             self._gld_instance.poll()
             if self._gld_instance.returncode is not None:
-                print("%s: Ack! Gld immediate exit wth code %d (try %d)"%(socket.gethostname(), self._gld_instance.returncode,gld_start_try+1))
-                self.debug.write("  Ack, where did you go? Gridlab immediately exited with code %d"%(self._gld_instance.returncode), self.debug_label)
+                print("%s: Ack! Gld immediate exit wth code %d (try %d):%s"%(socket.gethostname(), self._gld_instance.returncode,gld_start_try+1,gld_open_str))
+                self.debug.write("  Ack, where did you go? Gridlab immediately exited with code %d for %s"%(self._gld_instance.returncode), self.debug_label, gld_open_str)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Started", self.debug_label)
