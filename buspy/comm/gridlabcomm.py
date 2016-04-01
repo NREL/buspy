@@ -479,7 +479,13 @@ class GridlabCommHttp(GridlabCommBase):
         
         #Extract the bus and feeder name
         feeder_path = os.path.abspath(os.path.curdir).split(os.sep)[-2:]
-        feeder_str = string.join(feede_id)
+        feeder_str = string.join(feeder_path, '--')
+        feeder_path = string.join(feeder_path, os.sep)
+        
+        #Create unique gridlab temp directory name as subfolder in GLTEMP (if defined) or under /tmp if not
+        gltemp_path = os.environ().get('GLTEMP', '/tmp') + os.sep + feeder_str
+        #And actually create folder
+        os.makedirs(gltemp_path)
         
         #Loop until gridlab starts or max retrys is reached
         is_gld_started = False
@@ -498,7 +504,9 @@ class GridlabCommHttp(GridlabCommBase):
             self.debug.write(start_string, self.debug_label)
             
             try:    
-                self._gld_instance = subprocess.Popen(gld_open_str,shell=False,stderr=self.gld_stderr_file,stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX)
+                self._gld_instance = subprocess.Popen(gld_open_str,shell=False,stderr=self.gld_stderr_file,
+                                                      stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX,
+                                                      env={'GLTEMP':gltemp_path})
             except Exception as e:
                 print("%s: Uh Oh, Gld Popen problem (try %d): %s"%(socket.gethostname(),gld_start_try+1), feeder_path)
                 self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s) for %s"%(sys.exc_info()[0],str(e)), self.debug_label, feeder_path)
