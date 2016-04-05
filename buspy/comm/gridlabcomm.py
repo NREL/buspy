@@ -425,7 +425,7 @@ class GridlabCommHttp(GridlabCommBase):
         
         self.GLD_START_TIMEOUT = 60 #sec
         self.GLD_START_CHECK_DELAY = 0.1 #sec
-        self.GLD_START_RETRYS = 10
+        self.GLD_START_RETRYS = 20
         self.GLD_START_LOOP_PAUSE = 1 #sec
         
         atexit.register(GridlabCommHttp._cleanup,self)
@@ -483,9 +483,10 @@ class GridlabCommHttp(GridlabCommBase):
         feeder_path = string.join(feeder_path, os.sep)
         
         #Create unique gridlab temp directory name as subfolder in GLTEMP (if defined) or under /tmp if not
-        gltemp_path = os.environ().get('GLTEMP', '/tmp') + os.sep + feeder_str
-        #And actually create folder
-        os.makedirs(gltemp_path)
+	gltemp_path = os.environ.get('GLTEMP', '/tmp') + os.sep + feeder_str
+        #And actually create folder if needed
+	if not os.path.exists(gltemp_path):
+            os.makedirs(gltemp_path)
         
         #Loop until gridlab starts or max retrys is reached
         is_gld_started = False
@@ -504,12 +505,17 @@ class GridlabCommHttp(GridlabCommBase):
             self.debug.write(start_string, self.debug_label)
             
             try:    
-                self._gld_instance = subprocess.Popen(gld_open_str,shell=False,stderr=self.gld_stderr_file,
+                self._gld_instance = subprocess.Popen(gld_open_str, shell=False, stderr=self.gld_stderr_file,
                                                       stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX,
                                                       env={'GLTEMP':gltemp_path})
+                #self._gld_instance = subprocess.Popen(string.join(gld_open_str, " "), shell=True, stderr=self.gld_stderr_file,
+                #                                      stdout=self.gld_stdout_file, bufsize=-1, close_fds=ON_POSIX,
+                #                                      env={'GLTEMP':gltemp_path})
             except Exception as e:
-                print("%s: Uh Oh, Gld Popen problem (try %d): %s"%(socket.gethostname(),gld_start_try+1), feeder_path)
-                self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s) for %s"%(sys.exc_info()[0],str(e)), self.debug_label, feeder_path)
+		err_str = "%s: Uh Oh, Gld Popen problem (try %d)-- %s:%s for %s"%(socket.gethostname(), gld_start_try+1,
+			sys.exc_info()[0], str(e), feeder_path)
+                print(err_str)
+                self.debug.write(err_str, self.debug_label)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Popen complete", self.debug_label)
@@ -520,8 +526,10 @@ class GridlabCommHttp(GridlabCommBase):
             #Make sure gridlabd is actually running
             self._gld_instance.poll()
             if self._gld_instance.returncode is not None:
-                print("%s: Ack! Gld immediate exit wth code %d (try %d):%s"%(socket.gethostname(), self._gld_instance.returncode,gld_start_try+1,feeder_path))
-                self.debug.write("  Ack, where did you go? Gridlab immediately exited with code %d for %s"%(self._gld_instance.returncode), self.debug_label, feeder_path)
+                err_str = "%s: Ack! Gld immediate exit (try %d)-- code:%d for %s"%(socket.gethostname(), 
+		    gld_start_try+1, self._gld_instance.returncode, feeder_path)
+                print(err_str)
+                self.debug.write(err_str, self.debug_label)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
             self.debug.write("  Started", self.debug_label)
