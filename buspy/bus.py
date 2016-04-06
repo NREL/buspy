@@ -642,6 +642,10 @@ class GridlabBus(Bus):
         self._gld_initialized = False
         self.poll_time = self.params[GridlabBusParams.POLL_KEY]
         self.gld_path = ''
+        self._ext_gld = self.params[GridlabBusParams.EXT_GLD_KEY]
+        self._default_return = float('NaN') if self.params[GridlabBusParams.NAN_KEY] else 0.0
+        
+        print self._default_return
         
     def set_path(self,path):
         '''
@@ -736,7 +740,7 @@ class GridlabBus(Bus):
         #if it is not connected, send back 0s
         if not self._comm.connected:
             for o in _out.itervalues():
-                o.value = 0.0 
+                o.value = self._default_return
                 
         return _out
             

@@ -252,6 +252,8 @@ class GridlabBusParams(BusParams):
     PORT_KEY    = 'port'
     ARGS_KEY    = 'gld_args'
     POLL_KEY    = 'poll'
+    EXT_GLD_KEY = 'external_gld'
+    NAN_KEY     = 'use_NaN'
     
     #gld parameter keys
     GLD_FORMAT_KEY  = 'format'
@@ -281,6 +283,16 @@ class GridlabBusParams(BusParams):
         self._param_descriptions[self.POLL_KEY]         = {'description'      : 'Polling time for the GridLAB-D instance (in seconds).',
                                                            'required'         : False,
                                                            'default_value'    : 0.05}
+        
+        self._param_descriptions[self.EXT_GLD_KEY]      = {'description'      : 'Determines whether or not Buspy will start a GLD instance. If true, it is up to the user to start an external GLD instance AND a port must be specified either in the input file or on the command line. If false, Buspy will start the GLD instance.',
+                                                           'required'         : False,
+                                                           'parser'           : bool,
+                                                           'default_value'    : False}
+        
+        self._param_descriptions[self.NAN_KEY]          = {'description'      : 'Defines the error return on a GLD disconnect. If true, will use NaN. If false, will return 0.0.',
+                                                           'required'         : False,
+                                                           'parser'           : bool,
+                                                           'default_value'    : False}
         
         
         #Change GridLAB-D specific default ParamDescriptors

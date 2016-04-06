@@ -219,6 +219,21 @@ class TestBus( TestCase ):
     
         print 'bus finished'
         
+    def testGridlabBusExternal(self):
+        '''
+        Example using a GridlabBus with an external GLD.  Will change the base_power for the load
+        house0_agg_R4-25-00-1_tm_1_R4-25-00-1_tn_141 at each timestep. Will
+        then query the network_node power.
+        '''
+        FILENAME = 'gridlabd_bus.json'
+        
+        with open_bus(FILENAME) as bus:
+            while not bus.finished:
+                __out = bus.transaction(inputs=message_gld_input())
+                print out_to_string(__out)
+    
+        print 'bus finished'
+        
     def testMultiNodeBusTranslator(self):
         '''
         Example using a MultiNodeBus with Translator object.

@@ -482,10 +482,14 @@ class GridlabCommHttp(GridlabCommBase):
         feeder_str = string.join(feeder_path, '--')
         feeder_path = string.join(feeder_path, os.sep)
         
-        #Create unique gridlab temp directory name as subfolder in GLTEMP (if defined) or under /tmp if not
-        gltemp_path = os.environ().get('GLTEMP', '/tmp') + os.sep + feeder_str
-        #And actually create folder
-        os.makedirs(gltemp_path)
+        try:
+            #Create unique gridlab temp directory name as subfolder in GLTEMP (if defined) or under /tmp if not
+            gltemp_path = os.environ().get('GLTEMP', '/tmp') + os.sep + feeder_str
+            #And actually create folder
+            os.makedirs(gltemp_path)
+        except AttributeError: #added try-catch block because this does not work on my Windows machine -TMH (4/6/16)
+            self.debug.write('Unable to create gridlabd temp directory in GLTEMP or tmp. Using current directory')
+            gltemp_path = '.'
         
         #Loop until gridlab starts or max retrys is reached
         is_gld_started = False
@@ -506,7 +510,7 @@ class GridlabCommHttp(GridlabCommBase):
             try:    
                 self._gld_instance = subprocess.Popen(gld_open_str,shell=False,stderr=self.gld_stderr_file,
                                                       stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX,
-                                                      env={'GLTEMP':gltemp_path})
+                                                      env={'GLTEMP':gltemp_path} if gltemp_path != '.' else None) #do not use env if no gltemp set up
             except Exception as e:
                 print("%s: Uh Oh, Gld Popen problem (try %d): %s"%(socket.gethostname(),gld_start_try+1), feeder_path)
                 self.debug.write("  Uh Oh, there was a problem 'Popen'ing gridlabd: %s (%s) for %s"%(sys.exc_info()[0],str(e)), self.debug_label, feeder_path)
@@ -732,4 +736,8 @@ class GridlabCommHttp(GridlabCommBase):
             except ValueError:
                 pass
 
-    
+class GridlabCommHttpExternalGLD(GridlabCommHttp):
+    '''
+    New GridlabComm class that will NOT start a GLD, but instead rely on an external GLD instance and a provided PORT.
+    '''
+    pass
