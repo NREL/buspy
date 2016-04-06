@@ -116,6 +116,7 @@ import sys
 import logging
 
 from buspy.comm.gridlabcomm import GridlabCommHttp 
+from buspy.comm.gridlabcomm import GridlabCommHttpExternalGLD
 from time import sleep
 from copy import deepcopy
 
@@ -669,7 +670,10 @@ class GridlabBus(Bus):
         #Add node name info to debug file
         self.debug_instance.write('Running on host %s with python pid %s'%(socket.gethostname(),os.getpid()), self.folder)
         #TODO: some switch for the GridlabComm object.  currently assuming HTTP   
-        self._comm = GridlabCommHttp(self._to_cff_init())
+        if not self._ext_gld: #buspy will open GLD
+            self._comm = GridlabCommHttp(self._to_cff_init())
+        else:
+            self._comm = GridlabCommHttpExternalGLD(self._to_cff_init()) #can add a port parameter here -TMH (4/6/16) ',port=DESIRED_PORT)'
         #set the gridlabd path (new: 5/28/15 -TMH)
         self._comm.set_path(self.gld_path)
         self._comm.debug = DEFAULT_DEBUG if self.debug == False else self.debug_instance

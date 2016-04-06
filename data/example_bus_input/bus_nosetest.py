@@ -225,7 +225,7 @@ class TestBus( TestCase ):
         house0_agg_R4-25-00-1_tm_1_R4-25-00-1_tn_141 at each timestep. Will
         then query the network_node power.
         '''
-        FILENAME = 'gridlabd_bus.json'
+        FILENAME = 'gridlabd_bus_external_gld.json'
         
         with open_bus(FILENAME) as bus:
             while not bus.finished:

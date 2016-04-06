@@ -409,7 +409,7 @@ class GridlabCommHttp(GridlabCommBase):
     '''
     '''
     
-    def __init__(self,gld_init_pkt):
+    def __init__(self,gld_init_pkt,register_shutdown=True):
         '''
         
         '''
@@ -428,7 +428,8 @@ class GridlabCommHttp(GridlabCommBase):
         self.GLD_START_RETRYS = 10
         self.GLD_START_LOOP_PAUSE = 1 #sec
         
-        atexit.register(GridlabCommHttp._cleanup,self)
+        if register_shutdown:
+            atexit.register(GridlabCommHttp._cleanup,self)
     
     def get_clock(self, write_log=True):
         #gets the current GridLAB-D clock. 
@@ -740,4 +741,95 @@ class GridlabCommHttpExternalGLD(GridlabCommHttp):
     '''
     New GridlabComm class that will NOT start a GLD, but instead rely on an external GLD instance and a provided PORT.
     '''
-    pass
+    def __init__(self,gld_init_pkt,port=None):
+        #need to properly initialize
+        super(GridlabCommHttpExternalGLD,self).__init__(gld_init_pkt,False) #do not register the atexit handler, GLD is external
+    
+        #get port from either gld_init_pkt OR from a passed value. Passed value has priority
+        self.gld_port = port if port != None else self._info.port
+        
+        if (self.gld_port == None) or (self.gld_port == -1): #could maybe do some wizardry to get the port out of the OS, but I think the port should be specified by the user -TMH (4/6/16)
+            raise Exception('A port must be specified if using an external GLD instance.')
+    
+    
+    def open(self,gld_serv_pause=False,gld_path=''):
+        #need to overload the open function. Just set up an HTTP connection with an existing GLD.
+        self.connected = False
+        if self._info.host == None:
+            self._info.host = GLD_DEFAULT_HOST
+            
+        #TODO: Break common code into a function in the parent class. Right now I just copied and pasted for the time constraints of the journal paper. -TMH (4/6/16)
+        #change directory if one is provided
+        _cwd = os.path.abspath(os.path.curdir)
+
+        if self._info.folder != None:
+            os.chdir(self._info.folder)
+        
+        #Extract the bus and feeder name
+        feeder_path = os.path.abspath(os.path.curdir).split(os.sep)[-2:]
+        feeder_str = string.join(feeder_path, '--')
+        feeder_path = string.join(feeder_path, os.sep)
+        
+        #Loop until gridlab starts or max retrys is reached
+        is_gld_started = False
+        
+
+        for gld_start_try in xrange(self.GLD_START_RETRYS):
+            '''
+            Open TCP connection with GridLAB-D
+            '''
+            #open connection   
+            self.debug.write('Opening HTTP connection to ' + str(self._info.host) + ':' + str(self._info.port) + ' (try %d/%d)'%(gld_start_try+1,self.GLD_START_RETRYS), self.debug_label)
+    
+            #wait until gridlab responds over http. 
+            end_time = timeit.default_timer() + self.GLD_START_TIMEOUT
+            poll_count = 0
+            self.debug.write('  Starting poll loop', self.debug_label)
+            is_gld_started=False
+        
+            while(timeit.default_timer() < end_time):
+                poll_count +=1
+                #TODO: retries for the HTTP connection
+
+                self.connection = http.HTTPConnection(self._info.host,self._info.port)
+                gld_time=self.get_clock(write_log=True)
+                self.debug.write('  Current GridLAB-D time is %s'%(gld_time), self.debug_label)                    
+                if str(gld_time) != "NaT":                
+                    is_gld_started = True
+                    self.debug.write('  Success! GridLAB-D server started after ~%gsec (loop #%d)'%(
+                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count), self.debug_label)                    
+                    self.debug.write('  Current GridLAB-D time is %s'%(gld_time), self.debug_label)                    
+                    break
+                
+                time.sleep(self.GLD_START_LOOP_PAUSE)     #Pause in seconds
+
+            if is_gld_started:
+                break
+            else:
+                self.debug.write('  Shoot, GridLAB-D server not started after ~%gsec (loop #%d)'%(
+                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count), self.debug_label)                 
+                time.sleep(self.GLD_START_LOOP_PAUSE*random.uniform(5,10))
+                 
+        #turn off verbosity
+        self._set_object(self._control.verbose(), None, 'FALSE')
+        if not self.debug:
+            self._set_object(self._control.quiet(), None, 'TRUE')
+        if is_gld_started:
+            self.connected = True
+        else:
+            no_start_string = '%s: WARNING: Unable to communicate with GridLAB-D (folder=%s)'%(socket.gethostname(), self._info.folder)
+            self.debug.write(no_start_string, self.debug_label)
+            print(no_start_string)
+        
+        #change back to the original directory
+        os.chdir(_cwd)
+        
+        return self.connected
+    
+    def shutdown(self,resume=False):
+        #need to overload the shutdown function
+        if resume:
+            msg = self._control.resume()
+        else:
+            msg = self._control.shutdown()
+        self._gridlab_comm(msg, xml=False)

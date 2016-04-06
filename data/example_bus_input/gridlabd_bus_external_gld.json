@@ -16,6 +16,7 @@
 	"external_gld": true,
 	"use_NaN":true,
     "poll": 0.05,
+	"port":51003,
     "folder": ".",
     "debug":true,
     "debug_type":"dConsole"
