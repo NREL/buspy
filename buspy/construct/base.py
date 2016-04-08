@@ -218,7 +218,8 @@ def create_choice_descriptor(name,
                              description_prefix,
                              required=True,
                              default_value=None,
-                             parser=None,                             multi_select=False):
+                             parser=None,
+			     multi_select=False):
     """
     Helper method for describing parameters whose values should be chosen from a list.
     
