@@ -487,7 +487,7 @@ class GridlabCommHttp(GridlabCommBase):
             #Create unique gridlab temp directory name as subfolder in GLTEMP (if defined) or under /tmp if not
             gltemp_path = os.environ().get('GLTEMP', '/tmp') + os.sep + feeder_str
             #And actually create folder
-            if not os.path.exists(gltemp_path):^M
+            if not os.path.exists(gltemp_path):
 	        os.makedirs(gltemp_path)
         except AttributeError: #added try-catch block because this does not work on my Windows machine -TMH (4/6/16)
             self.debug.write('Unable to create gridlabd temp directory in GLTEMP or tmp. Using current directory')
