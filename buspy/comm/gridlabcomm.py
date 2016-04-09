@@ -507,30 +507,29 @@ class GridlabCommHttp(GridlabCommBase):
         
             gld_cmd_as_list = self.gridlabd_cmd_args(self._info.filename,*self.dict_to_args(arg_list))
 
-            debug_string = 'starting GridLAB-D (try %d/%d): %s'%(gld_start_try+1,self.GLD_START_RETRYS, gld_cmd_as_list)
+            debug_string = 'starting GridLAB-D (try %d/%d): %s'%(gld_start_try+1,self.GLD_START_RETRYS, feeder_path)
             self.debug.write(debug_string, self.debug_label)
             logging.debug(debug_string)
+            self.debug.write("Command as list: %s"%gld_cmd_as_list, self.debug_label)
             
             # Note: Tried replacing Popen with the older os.spawn* and GridLAB-D never successfully started. -BSP
             # Specifically tried:
             # gld_pid = os.spawnv(os.P_NOWAIT, gld_cmd_as_list[0], gld_cmd_as_list[1:])  #DOES NOT WORK: Segfault
             # gld_pid = os.spawnl(os.P_NOWAIT, " ".join(gld_cmd_as_list))  #DOES NOT WORK: Segfault
             try:    
-                self._gld_instance = subprocess.Popen(gld_open_str, shell=False, stderr=self.gld_stderr_file,
+                self._gld_instance = subprocess.Popen(gld_cmd_as_list, shell=False, stderr=self.gld_stderr_file,
                                                       stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX,
                                                       env={'GLTEMP':gltemp_path} if gltemp_path != '.' else None) #do not use env if no gltemp set up
                 #self._gld_instance = subprocess.Popen(string.join(gld_open_str, " "), shell=True, stderr=self.gld_stderr_file,
                 #                                      stdout=self.gld_stdout_file, bufsize=-1, close_fds=ON_POSIX,
                 #                                      env={'GLTEMP':gltemp_path})
             except Exception as e:
-                err_str="%s: Uh Oh, problem launching GridLAB-D (try %d): %s"%(socket.gethostname(), gld_start_try+1, feeder_path)
-			sys.exc_info()[0], str(e), feeder_path)
+                err_str = "%s: Uh Oh, Gld Popen problem (try %d)-- %s:%s for %s"%(socket.gethostname(), gld_start_try+1,
+			                                                       sys.exc_info()[0], str(e), feeder_path)
                 logging.warning(err_str)
                 self.debug.write(err_str, self.debug_label)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
-            self.debug.write(debug_string, self.debug_label)
-            logging.debug(debug_string)
             
             #Give GridLAB-D a little time to start-up    
             time.sleep(self.GLD_START_CHECK_DELAY)
@@ -539,8 +538,8 @@ class GridlabCommHttp(GridlabCommBase):
             self._gld_instance.poll()
             if self._gld_instance.returncode is not None:
                 err_str = "%s: Ack! Gld immediate exit (try %d)-- code:%d for %s"%(socket.gethostname(), 
-		    gld_start_try+1, self._gld_instance.returncode, feeder_path)
-                print(err_str)
+		                                          gld_start_try+1, self._gld_instance.returncode, feeder_path)
+                logging.warning(err_str)
                 self.debug.write(err_str, self.debug_label)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
@@ -568,23 +567,23 @@ class GridlabCommHttp(GridlabCommBase):
                 self.debug.write('  Current GridLAB-D time is %s'%(gld_time), self.debug_label)                    
                 if str(gld_time) != "NaT":                
                     is_gld_started = True
-                    self.debug.write('  Success! GridLAB-D server started after ~%gsec (loop #%d)'%(
-                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count), self.debug_label)                    
-                    self.debug.write('  Current GridLAB-D time is %s'%(gld_time), self.debug_label)                    
                     break
                 
                 time.sleep(self.GLD_START_LOOP_PAUSE)     #Pause in seconds
 
             if is_gld_started:
+                self.debug.write('  Start after ~%gsec (loop #%d)'%(self.GLD_START_LOOP_PAUSE*poll_count,poll_count), self.debug_label)                    
+                debug_string = ' Success! GridLAB-D start for %s on port=%d (paused at %s)'%(
+                                        feeder_path, self._info.port, gld_time)
+                self.debug.write(debug_string, self.debug_label)
+                logging.debug(debug_string)
                 break
             else:
-                debug_string='  Shoot, GridLAB-D server not started after ~%gsec (loop #%d)'%(
-                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count)
+                debug_string="%s: Shoot, Can't reach Gld after trying ~%gsec... Kill and restart (try #%d) for %s"%(
+                        socket.gethostname(), self.GLD_START_LOOP_PAUSE*poll_count, gld_start_try+1, feeder_path)
                 self.debug.write(debug_string, self.debug_label)
                 logging.warning(debug_string)
                 #If not started, need to exit the process cleanly
-                logging.warning("%s: Kill Gld and restart (try #%d)"%(socket.gethostname(), gld_start_try+1))
-                self.debug.write('  Timeout: Killing Process', self.debug_label)
                 self._gld_instance.kill()
                 time.sleep(self.GLD_START_LOOP_PAUSE*random.uniform(5,10)) 
         #turn off verbosity
@@ -594,7 +593,7 @@ class GridlabCommHttp(GridlabCommBase):
         if is_gld_started:
             self.connected = True
         else:
-            no_start_string = '%s: WARNING: Unable to start and communicate with GridLAB-D (folder=%s)'%(socket.gethostname(), self._info.folder)
+            no_start_string = '%s: WARNING: Unable to start and communicate with GridLAB-D (%s)'%(socket.gethostname(), feeder_path)
             self.debug.write(no_start_string, self.debug_label)
             logging.error(no_start_string)
         
