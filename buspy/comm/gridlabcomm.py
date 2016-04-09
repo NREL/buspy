@@ -108,6 +108,7 @@ import timeit
 import time
 import random
 import string
+import logging
 
 #socket stuff
 from contextlib import contextmanager
@@ -329,7 +330,7 @@ class GridlabCommBase(CommBase):
                 
         return ret
     
-    #creates the gridlab command line call with the specified model and arguments (*args takes a dict_to_args)
+    #creates the gridlab command line call (as a list) with the specified model and arguments (*args takes a dict_to_args)
     def gridlabd_cmd_args(self,model,*args):
         #new: set gridlabd path (5/28/15) -TMH
         ret = [os.path.join(self.gld_path, self._GRIDLABD),str(model)]
@@ -504,11 +505,16 @@ class GridlabCommHttp(GridlabCommBase):
                 self._info.port = random.randrange(25000,60000) #new range to not-overlap with global port option in IGMS tool
             arg_list[self.PORT_FLAG] = str(self._info.port)
         
-            gld_open_str = self.gridlabd_cmd_args(self._info.filename,*self.dict_to_args(arg_list))
+            gld_cmd_as_list = self.gridlabd_cmd_args(self._info.filename,*self.dict_to_args(arg_list))
 
-            start_string = 'starting GridLAB-D (try %d/%d): %s'%(gld_start_try+1,self.GLD_START_RETRYS, gld_open_str)
-            self.debug.write(start_string, self.debug_label)
+            debug_string = 'starting GridLAB-D (try %d/%d): %s'%(gld_start_try+1,self.GLD_START_RETRYS, gld_cmd_as_list)
+            self.debug.write(debug_string, self.debug_label)
+            logging.debug(debug_string)
             
+            # Note: Tried replacing Popen with the older os.spawn* and GridLAB-D never successfully started. -BSP
+            # Specifically tried:
+            # gld_pid = os.spawnv(os.P_NOWAIT, gld_cmd_as_list[0], gld_cmd_as_list[1:])  #DOES NOT WORK: Segfault
+            # gld_pid = os.spawnl(os.P_NOWAIT, " ".join(gld_cmd_as_list))  #DOES NOT WORK: Segfault
             try:    
                 self._gld_instance = subprocess.Popen(gld_open_str, shell=False, stderr=self.gld_stderr_file,
                                                       stdout=self.gld_stdout_file,bufsize=1,close_fds=ON_POSIX,
@@ -517,13 +523,14 @@ class GridlabCommHttp(GridlabCommBase):
                 #                                      stdout=self.gld_stdout_file, bufsize=-1, close_fds=ON_POSIX,
                 #                                      env={'GLTEMP':gltemp_path})
             except Exception as e:
-		err_str = "%s: Uh Oh, Gld Popen problem (try %d)-- %s:%s for %s"%(socket.gethostname(), gld_start_try+1,
+                err_str="%s: Uh Oh, problem launching GridLAB-D (try %d): %s"%(socket.gethostname(), gld_start_try+1, feeder_path)
 			sys.exc_info()[0], str(e), feeder_path)
-                print(err_str)
+                logging.warning(err_str)
                 self.debug.write(err_str, self.debug_label)
                 time.sleep(random.uniform(0.1,2.0))
                 continue
-            self.debug.write("  Popen complete", self.debug_label)
+            self.debug.write(debug_string, self.debug_label)
+            logging.debug(debug_string)
             
             #Give GridLAB-D a little time to start-up    
             time.sleep(self.GLD_START_CHECK_DELAY)
@@ -539,7 +546,7 @@ class GridlabCommHttp(GridlabCommBase):
                 continue
             self.debug.write("  Started", self.debug_label)
             self.debug.write('  Gridlab: pid=%s port=%d'%(self._gld_instance.pid,self._info.port), self.debug_label)
-                
+
             '''
             Open TCP connection with GridLAB-D
             '''
@@ -571,10 +578,12 @@ class GridlabCommHttp(GridlabCommBase):
             if is_gld_started:
                 break
             else:
-                self.debug.write('  Shoot, GridLAB-D server not started after ~%gsec (loop #%d)'%(
-                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count), self.debug_label)                 
+                debug_string='  Shoot, GridLAB-D server not started after ~%gsec (loop #%d)'%(
+                        self.GLD_START_LOOP_PAUSE*poll_count,poll_count)
+                self.debug.write(debug_string, self.debug_label)
+                logging.warning(debug_string)
                 #If not started, need to exit the process cleanly
-                print("%s: Kill Gld and restart (try #%d)"%(socket.gethostname(), gld_start_try+1))
+                logging.warning("%s: Kill Gld and restart (try #%d)"%(socket.gethostname(), gld_start_try+1))
                 self.debug.write('  Timeout: Killing Process', self.debug_label)
                 self._gld_instance.kill()
                 time.sleep(self.GLD_START_LOOP_PAUSE*random.uniform(5,10)) 
@@ -587,7 +596,7 @@ class GridlabCommHttp(GridlabCommBase):
         else:
             no_start_string = '%s: WARNING: Unable to start and communicate with GridLAB-D (folder=%s)'%(socket.gethostname(), self._info.folder)
             self.debug.write(no_start_string, self.debug_label)
-            print(no_start_string)
+            logging.error(no_start_string)
         
         #change back to the original directory
         os.chdir(_cwd)
