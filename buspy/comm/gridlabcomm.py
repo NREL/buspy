@@ -574,7 +574,7 @@ class GridlabCommHttp(GridlabCommBase):
             else:
                 debug_string='  Shoot, GridLAB-D server not started after ~%gsec (loop #%d)'%(
                         self.GLD_START_LOOP_PAUSE*poll_count,poll_count)
-                self.debug.write(debug_string, self.debug_label)                 
+                self.debug.write(debug_string, self.debug_label)
                 logging.warning(debug_string)
                 #If not started, need to exit the process cleanly
                 logging.warning("%s: Kill Gld and restart (try #%d)"%(socket.gethostname(), gld_start_try+1))
