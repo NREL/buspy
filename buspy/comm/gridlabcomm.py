@@ -424,7 +424,7 @@ class GridlabCommHttp(GridlabCommBase):
         self._gld_instance = None
         self.connected = False
         
-        self.GLD_START_TIMEOUT = 60 #sec
+        self.GLD_START_TIMEOUT = 300 #sec
         self.GLD_START_CHECK_DELAY = 0.1 #sec
         self.GLD_START_RETRYS = 20
         self.GLD_START_LOOP_PAUSE = 1 #sec
