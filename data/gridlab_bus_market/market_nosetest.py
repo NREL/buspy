@@ -87,12 +87,12 @@ def message_gld_input():
     '''
     Randomly assigns a kW power rating to the GridLAB-D house load.
     '''
-    NAME = 'example_climate'
-    PARAM = 'temperature'
+    NAME = 'RTP_Market'
+    PARAM = 'fixed_price'
     
     transfer = MessageCommonData()
     
-    transfer.add_param(CommonParam(name=NAME,param=PARAM,value=abs(random.normal(80.0,10.0))))
+    transfer.add_param(CommonParam(name=NAME,param=PARAM,value=abs(random.normal(30.0,10.0))))
     
     return transfer
 
@@ -106,92 +106,20 @@ class TestBus( TestCase ):
     
     Usage:
     
-        nosetests bus_nosetest.py:TestBus.<test_case>
+        nosetests market_nosetest.py:TestBus.<test_case>
         
         where <test_case> is:
-            testConstantBus
-            testConstantBusManualOpen
-            testConstantBusTranslator
-            testFileBus
-            testFileBusTranslator
+            testGridlabBus
             
     '''
     
-    def testConstantBus(self):
-        '''
-        Example using a ConstantBus.
-        '''
-        FILENAME = 'constant_bus.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=None)
-                print out_to_string(__out)
-    
-        print 'bus finished'
-        
-    def testConstantBusManualOpen(self):
-        '''
-        Example using a ConstantBus.  Manually load, start, 
-        and stop bus (instead of using 'with' statement)
-        '''
-        FILENAME = 'constant_bus.json'
-        
-        bus = load_bus('.',FILENAME)
-        bus.start_bus()
-        while not bus.finished:
-            __out = bus.transaction(inputs=None)
-            print out_to_string(__out)
-        bus.stop_bus()
-        print 'bus finished'
-        
-    def testConstantBusTranslator(self):
-        '''
-        Example using a ConstantBus with an AggregatorBusTranslator.
-        '''
-        FILENAME = 'constant_bus_translator.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=None)
-                print translator_out_to_string(__out)
-    
-        print 'bus finished'
-        
-    
-    def testFileBus(self):
-        '''
-        Example using a FileBus.
-        '''
-        FILENAME = 'file_bus.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=None)
-                print out_to_string(__out)
-    
-        print 'bus finished'
-        
-    def testFileBusTranslator(self):
-        '''
-        Example using a FileBus with an AggregatorBusTranslator.
-        '''
-        FILENAME = 'file_bus_translator.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=None)
-                print translator_out_to_string(__out)
-    
-        print 'bus finished'
-        
     def testGridlabBus(self):
         '''
         Example using a GridlabBus.  Will change the base_power for the load
         house0_agg_R4-25-00-1_tm_1_R4-25-00-1_tn_141 at each timestep. Will
         then query the network_node power.
         '''
-        FILENAME = 'gridlabd_bus.json'
+        FILENAME = 'gridlabd_market_bus.json'
         
         with open_bus(FILENAME) as bus:
             while not bus.finished:
@@ -200,52 +128,7 @@ class TestBus( TestCase ):
     
         print 'bus finished'
         
-    def testGridlabBusWithPath(self):
-        '''
-        Example using a GridlabBus.  Will change the base_power for the load
-        house0_agg_R4-25-00-1_tm_1_R4-25-00-1_tn_141 at each timestep. Will
-        then query the network_node power.
-        '''
-        FILENAME = 'gridlabd_bus.json'
-        PATHNAME = 'C:\\Program Files (x86)\\GridLAB-D\\bin'
         
-        bus = load_bus('.',FILENAME)
-        bus.set_path(PATHNAME)
-        bus.start_bus()
-        while not bus.finished:
-            __out = bus.transaction(inputs=message_gld_input())
-            print out_to_string(__out)
-        bus.stop_bus()
-    
-        print 'bus finished'
-        
-    def testGridlabBusExternal(self):
-        '''
-        Example using a GridlabBus with an external GLD.  Will change the base_power for the load
-        house0_agg_R4-25-00-1_tm_1_R4-25-00-1_tn_141 at each timestep. Will
-        then query the network_node power.
-        '''
-        FILENAME = 'gridlabd_bus_external_gld.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=message_gld_input())
-                print out_to_string(__out)
-    
-        print 'bus finished'
-        
-    def testMultiNodeBusTranslator(self):
-        '''
-        Example using a MultiNodeBus with Translator object.
-        '''
-        FILENAME = 'multi_bus_translator.json'
-        
-        with open_bus(FILENAME) as bus:
-            while not bus.finished:
-                __out = bus.transaction(inputs=translator_multinode_input())
-                print translator_out_to_string(__out)
-    
-        print 'bus finished'
         
     
         

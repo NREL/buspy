@@ -1,0 +1,164 @@
+#set minimum_timestep=900.0;
+
+module residential{
+	implicit_enduses NONE;
+}
+module tape;
+module assert;
+module climate;
+module powerflow;
+module market;
+
+clock {
+	timezone MST7;
+	starttime '2012-06-01 00:00:00';
+	stoptime '2012-06-02 00:00:00';
+};
+
+
+schedule zippwr {
+	* 0-5 * * * .29307107017222;
+	* 6 * * * 0.58614214034444;
+	* 7-9 * * * 0.87921321051666;
+	* 10-15 * * * 0.58614214034444;
+	* 16 * * * 0.87921321051666;
+	* 17 * * * 1.1722842806889;
+	* 18-20 * * * 1.4653553508611;
+	* 21 * * * 1.1722842806889;
+	* 22 * * * 0.58614214034444;
+	* 23 * * * .29307107017222;
+}
+
+object csv_reader{
+	name WeatherReader;
+	filename weather.csv;
+};
+
+object climate{
+	name example_climate;
+	tmyfile weather.csv;
+	reader WeatherReader;
+    object recorder{
+        property temperature;
+        file "test_air_temp.csv";
+        interval 60;
+    };
+};
+
+schedule heatspt{
+	* * * * * 65;
+}
+
+schedule coolspt{
+	* * * * * 75;
+}
+
+//NEW MARKET ITEMS***********************************************************************************
+
+class auction {
+	double current_price_mean_12h;
+	double current_price_stdev_12h;
+}
+
+//BusPy will set this in IGMS
+object player {
+	name MarketPlayer;
+	parent RTP_Market;
+	property fixed_price;
+	file market.player;
+}
+
+//market
+object auction {
+	name RTP_Market; //Market_1
+
+	unit MWh;
+	period 3600;
+	verbose FALSE; //TRUE;
+	special_mode BUYERS_ONLY; //no demand bids, set supply price. This is what buspy should set
+	warmup 0;
+	init_price 18.99;
+	init_stdev 1e-6;
+	object multi_recorder {
+		property current_market.clearing_price,current_market.clearing_quantity,current_market.marginal_quantity;
+		file "test_market_output.csv";
+		interval 3600;
+	};
+}
+
+//END OF NEW MARKET ITEMS*********************************************************************************
+
+object triplex_meter{
+	nominal_voltage 120;
+	phases AS;
+	object house{
+        name house_test;
+		window_wall_ratio 0.07;
+		cooling_COP 3.0;
+		system_mode OFF;
+		auxiliary_strategy DEADBAND;
+		heating_system_type HEAT_PUMP;
+		cooling_system_type ELECTRIC;
+		air_temperature 66.0;
+		mass_temperature 66.0;
+		heating_setpoint heatspt*1;
+		cooling_setpoint coolspt*1;
+		object ZIPload {
+			heat_fraction 1;
+			base_power zippwr*1;		
+			power_pf 1;
+			power_fraction 1;
+			current_pf 0;
+			current_fraction 0;
+			impedance_pf 0;
+			impedance_fraction 0;
+		};
+		object recorder{
+			property air_temperature;
+			file "test_house_temp.csv";
+			interval 60;
+		};
+		//NEW FOR MARKET************************************
+		
+		object passive_controller {
+			name cool_control;
+			period 300;
+			base_setpoint 78;
+			control_mode RAMP;
+			expectation_object RTP_Market;
+			expectation_property current_price_mean_12h;
+			setpoint cooling_setpoint;
+			observation_object RTP_Market;
+			observation_property current_market.clearing_price;
+			stdev_observation_property current_price_stdev_12h;
+			range_low -2;
+			range_high 5;
+			ramp_low 3;
+			ramp_high 2;
+		};
+		object passive_controller {
+			name heat_control;
+			period 300;
+			base_setpoint 62;
+			control_mode RAMP;
+			expectation_object RTP_Market;
+			expectation_property current_price_mean_12h;
+			setpoint heating_setpoint;
+			observation_object RTP_Market;
+			observation_property current_market.clearing_price;
+			stdev_observation_property current_price_stdev_12h;
+			range_low -7;
+			range_high 10;
+			ramp_low -1;
+			ramp_high -3;
+		};
+		
+		object multi_recorder {
+			property cooling_setpoint,cool_control:expectation,cool_control:observation,cool_control:stdev_observation,cool_control:range_low,cool_control:range_high,cool_control:ramp_low,cool_control:ramp_high,heating_setpoint,heat_control:expectation,heat_control:observation,heat_control:stdev_observation,heat_control:range_low,heat_control:range_high,heat_control:ramp_low,heat_control:ramp_high;
+			file "test_market_controller_output.csv";
+			interval 60;
+		};
+	};
+}
+
+

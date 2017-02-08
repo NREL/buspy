@@ -1,0 +1,23 @@
+{
+    "class_name": "GridlabBusParams",
+    "bus_type": "GridlabBus",
+    "filename": "example_gridlabd.glm",
+    "time_info": {
+        "start": "2012-06-01 00:00:00",
+        "delta": 900,
+        "end": "2012-06-02 00:00:00"
+    },
+    "output": [
+        {
+            "name": "house_test",
+            "param": "air_temperature"
+        }
+    ],
+	"external_gld": true,
+	"use_NaN":true,
+    "poll": 0.05,
+	"port":51003,
+    "folder": ".",
+    "debug":true,
+    "debug_type":"dConsole"
+}
