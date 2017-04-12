@@ -109,9 +109,6 @@ from buspy.analyze.loaders.player import player_to_timeseries
 import buspy.utils.action as action
 import os
 import numpy as np
-import json
-import shutil
-import sys
 
 import logging
 
@@ -645,6 +642,7 @@ class GridlabBus(Bus):
         self.gld_path = ''
         self._ext_gld = self.params[GridlabBusParams.EXT_GLD_KEY]
         self._default_return = float('NaN') if self.params[GridlabBusParams.NAN_KEY] else 0.0
+        self.gld_port = self.params[GridlabBusParams.PORT_KEY]
         
         print self._default_return
         
@@ -672,8 +670,8 @@ class GridlabBus(Bus):
         #TODO: some switch for the GridlabComm object.  currently assuming HTTP   
         if not self._ext_gld: #buspy will open GLD
             self._comm = GridlabCommHttp(self._to_cff_init())
-        else:
-            self._comm = GridlabCommHttpExternalGLD(self._to_cff_init()) #can add a port parameter here -TMH (4/6/16) ',port=DESIRED_PORT)'
+        else: #Use existing, external GridLAB-D instance
+            self._comm = GridlabCommHttpExternalGLD(self._to_cff_init(), self.gld_port) #Port number added from file -- BSP (4/11/2017)
         #set the gridlabd path (new: 5/28/15 -TMH)
         self._comm.set_path(self.gld_path)
         self._comm.debug = DEFAULT_DEBUG if self.debug == False else self.debug_instance
