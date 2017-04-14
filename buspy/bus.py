@@ -668,6 +668,9 @@ class GridlabBus(Bus):
         #Add node name info to debug file
         self.debug_instance.write('Running on host %s with python pid %s'%(socket.gethostname(),os.getpid()), self.folder)
         #TODO: some switch for the GridlabComm object.  currently assuming HTTP   
+        
+        logging.debug("%s-- EXT_GLD=%s, Port=%d", self.gld_path, self._ext_gld, self.gld_port)
+
         if not self._ext_gld: #buspy will open GLD
             self._comm = GridlabCommHttp(self._to_cff_init())
         else: #Use existing, external GridLAB-D instance
@@ -680,7 +683,7 @@ class GridlabBus(Bus):
          
         if not self._gld_initialized:
             no_init_err_str = "WARNING: GridLAB-D failed to initialize for %s"%(self.folder)
-            print(no_init_err_str)
+            logging.debug(no_init_err_str)
             self.debug_instance.write(no_init_err_str, self.folder)
 #BP: possible source of hang            raise Exception('GridLAB-D failed to open.')
     
