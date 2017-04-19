@@ -48,3 +48,14 @@ import os
 
 def bus_dir():
     return os.path.realpath(os.path.dirname(os.path.realpath(__file__)))
+
+# Print hash of project on import
+try:
+    import os
+    path = bus_dir()
+    from subprocess import check_output as _check_output
+    _hash = _check_output(["git", "rev-parse", "HEAD"], cwd=path).strip()
+    print('HASH of {} is {}'.format(bus_dir(), _hash))
+except:
+    print('Unable to print hash of {}'.format(bus_dir()))
+
