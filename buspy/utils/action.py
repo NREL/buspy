@@ -217,7 +217,7 @@ class ProductAction(Action):
 
 class DifferenceAction(Action):
     def __init__(self,name,action_list):
-        print 'WARNING: DifferenceAction may produce unintended output based on the ordering of actions.'
+        print('WARNING: DifferenceAction may produce unintended output based on the ordering of actions.')
         super(DifferenceAction,self).__init__(name,action_list)
         
     def _local_action(self,a,b):
@@ -232,7 +232,7 @@ class DifferenceAction(Action):
 
 class QuotientAction(Action):
     def __init__(self,name,action_list):
-        print 'WARNING: QuotientAction may produce unintended output based on the ordering of actions.'
+        print('WARNING: QuotientAction may produce unintended output based on the ordering of actions.')
         super(QuotientAction,self).__init__(name,action_list)
         
     def _local_action(self,a,b):
