@@ -171,8 +171,8 @@ class DebugThread(Thread):
                     
                     ##if print, print
                     if self.__print_output:
-                        print _ts + line
-                      
+                        print(_ts + line)
+
                 if self._open:
                     self._file.flush()
         except:
@@ -275,8 +275,8 @@ class DebugFileNonthread(DebugBase):
         _out = self._timestamp(label) + s
         
         if self._print_output:
-            print _out
-            
+            print(_out)
+
         self._file.write(_out + '\n')
         self._flush()
     
@@ -317,8 +317,8 @@ class DebugConsole(DebugBase):
         pass
     
     def write(self,s,label=''):
-        print self._timestamp(label) + s
-    
+        print(self._timestamp(label) + s)
+
     def close(self):
         pass
     

@@ -74,6 +74,11 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import buspy.comm.message as message
 
+try:
+    from urllib import quote
+except ImportError:
+    from urllib.parse import quote
+
 #for GridLAB-D subprocess
 import sys
 
@@ -232,8 +237,8 @@ class CommBase(object):
     @staticmethod
     def param_dict_itervalues(d):
         '''duplicated to avoid circular imports'''
-        for params in d.itervalues():
-            for param_obj in params.itervalues():
+        for params in d.values():
+            for param_obj in params.values():
                 yield param_obj
 
 
@@ -367,8 +372,8 @@ class GridlabHttpControlStrings:
         return str(time)+ tz
     
     def pauseat(self,time,timezone=None):
-        return urllib.quote(self._CONTROL+self._PAUSEAT+self._time_str(time, timezone),safe=':/=')
-    
+        return quote(self._CONTROL+self._PAUSEAT+self._time_str(time, timezone),safe=':/=')
+
     def clock(self):
         return self._GLOBAL + self._CLOCK
     
@@ -392,8 +397,8 @@ class GridlabHttpControlStrings:
             ret += '=' + val
         if unit != None:
             ret += ' ' + unit
-        return urllib.quote(ret,safe=':/=+')
-    
+        return quote(ret,safe=':/=+')
+
     def xml_to_valstr(self,txt):
         try:
             xml = ET.fromstring(txt).find('value').text
@@ -478,7 +483,7 @@ class GridlabCommHttp(GridlabCommBase):
         
         #Loop until gridlab starts or max retrys is reached
         is_gld_started = False
-        for gld_start_try in xrange(self.GLD_START_RETRYS):
+        for gld_start_try in range(self.GLD_START_RETRYS):
             self.gld_stdout_file = open('stdout', 'w+')
             self.gld_stderr_file = open('stderr', 'w+')
         
@@ -585,8 +590,8 @@ class GridlabCommHttp(GridlabCommBase):
         
         If it is a global object, set CommonParam.param=None (i.e., CommonParam.name=CommonParam.value)
         '''
-        
-        for param in params.itervalues():
+
+        for param in params.values():
             #try to change from complex to a complex string
             _val = str(param.value).lstrip('(').rstrip(')')
             self._set_object(param.name, param.param, _val, param.unit)
