@@ -1,5 +1,6 @@
 '''
-[LICENSE]
+[LICENSE]
+
 Copyright (c) 2015, Alliance for Sustainable Energy.
 All rights reserved.
 
@@ -39,8 +40,10 @@ If you use this work or its derivatives for research publications, please cite:
 Timothy M. Hansen, Bryan Palmintier, Siddharth Suryanarayanan, 
 Anthony A. Maciejewski, and Howard Jay Siegel, "Bus.py: A GridLAB-D 
 Communication Interface for Smart Distribution Grid Simulations," 
-in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
-[/LICENSE]
+in IEEE PES General Meeting 2015, Denver, CO, July 2015, 5 pages.
+
+[/LICENSE]
+
 Created on August 6, 2014
 
 @author: Tim Hansen
@@ -774,6 +777,156 @@ class GridlabBus(Bus):
         #output parameters
         ret.gld_out = self.bus_out
         
+        return ret
+    
+    '''
+    Local functions
+    '''
+
+##########################################################
+# ZMQBus
+##########################################################
+
+class ZMQBus(Bus):
+    '''
+    Simple pass through to connect to external simulators using ZMQ.
+    
+    Built for connecting an OpenDSS instance running with HELICS on a remote 
+    Windows machine as part of an IGMS run for SuNLaMP project
+    '''
+    
+    
+    def __init__(self, json_file):
+        super(GridlabBus,self).__init__(json_file)
+        
+        self._comm = None
+
+        print("ZMQBus __init__ json_file: %s"%json_file)
+        print("ZMQBus __init__ self: %s"%self)
+
+        print self._default_return
+        
+    def set_path(self,path):
+        '''
+        Sets the path to gridlabd to arg path. Default: first gridlabd in system PATH.
+        '''
+        print("ZMQBus set_path path: %s"%path)
+        print("ZMQBus set_path self: %s"%self)
+    
+    '''
+    Bus interface implementation
+    '''
+    def start_bus(self):
+        '''
+        start_bus()
+        
+        Starts a GridLAB-D instance.
+        
+        Throws:
+            Exception
+        '''
+        print("ZMQBus start_bus self: %s"%self)
+
+    
+    
+    def stop_bus(self):
+        '''
+        stop_bus()
+        
+        Stops the GridLAB-D instance.
+        
+        Throws:
+            Exception
+        '''
+        print("ZMQBus stop_bus self: %s"%self)
+        
+    def _local_bus_send(self,inputs):
+        '''
+        _local_bus_send(inputs)
+        
+        Sends the inputs to GridLAB-D.
+        '''
+        print("ZMQBus _local_bus_send inputs: %s"%inputs)
+        print("ZMQBus _local_bus_send self: %s"%self)
+
+#         assert isinstance(inputs,message.MessageCommonData)
+        
+#         self._comm.send(inputs)
+      
+    
+    def _local_bus_runto(self,time=None):
+        '''
+        _local_bus_runto(time)
+        
+        Runs the bus to the specified time.
+        '''
+
+        print("ZMQBus _local_bus_runto time: %s"%time)
+        print("ZMQBus _local_bus_runto self: %s"%self)
+
+#         self._comm.run_to_time(time)
+        
+#     def _local_bus_runto_poll(self,time=None):
+#         while(not self._comm.poll(time)):
+#             #check if connected, otherwise do not get into the infinite loop
+#             if not self._comm.connected:
+#                 break
+#             sleep(self.poll_time)
+     
+    
+    def _local_bus_recv(self,outputs):
+        '''
+        _local_bus_recv(outputs)
+        
+        Local receive function.  Subclasses need to implement this.
+        '''
+
+        print("ZMQBus _local_bus_recv outputs: %s"%outputs)
+        print("ZMQBus _local_bus_recv self: %s"%self)
+
+
+#         assert isinstance(outputs,message.MessageCommonData)
+#         
+#         _out = self._comm.recv(outputs=outputs)
+#         
+#         #if it is not connected, send back 0s
+#         if not self._comm.connected:
+#             for o in _out.itervalues():
+#                 o.value = self._default_return
+#                 
+#         return _out
+        return {}
+            
+   
+    @staticmethod
+    def generate_template(filename):
+        print("ZMQBus generate_template (static) filename (crash expected): %s"%filename)
+    
+        #TODO: ZMQBusParams
+        Bus.generate_template(filename, template=ZMQBusParams)
+    
+    def _to_cff_init(self):
+        print("ZMQBus _to_cff_init self: %s"%self)
+
+        ret = message.MessageCommonGridlabInit()
+#         
+#         #transfer JSON packet contents to ret
+#         #file - required
+#         ret.filename = Bus._json_to_obj(self.params,GridlabBusParams.FILE_KEY)
+#         if ret.filename == None:
+#             raise Exception('No filename in the JSON init packet.')
+#         
+#         ret.host =      Bus._json_to_obj(self.params,GridlabBusParams.HOST_KEY)
+#         ret.port =      Bus._json_to_obj(self.params,GridlabBusParams.PORT_KEY)
+#         ret.gld_args =  Bus._json_to_obj(self.params,GridlabBusParams.ARGS_KEY)
+#         ret.folder =    Bus._json_to_obj(self.params,GridlabBusParams.FOLDER_KEY)
+#         
+#         #time_info parameters
+#         ret.time_info = self.sim_time
+#         
+#         #output parameters
+#         ret.gld_out = self.bus_out
+         
         return ret
     
     '''
