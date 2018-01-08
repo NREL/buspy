@@ -809,8 +809,6 @@ class ZMQBus(Bus):
         print("ZMQBus __init__ json_file: %s" % json_file)
         print("ZMQBus __init__ self: %s" % self)
 
-        print self._default_return
-
     def set_path(self, path):
         '''
         Sets the path to gridlabd to arg path. Default: first gridlabd in system PATH.
